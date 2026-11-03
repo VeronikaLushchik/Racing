@@ -4,6 +4,8 @@ export interface TTraceSeries {
 	channel: TTraceChannel;
 	/** CSS variable holding the colour, e.g. --chart-speed. */
 	colorVar: string;
+	/** Name shown in the tooltip; the channel id is used when omitted. */
+	label?: string;
 	isStep?: boolean;
 }
 
