@@ -12,7 +12,7 @@ import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
 
 import { DEFAULT_TRACE_WINDOW_S, TRACE_WINDOWS_S } from './driverTelemetryConstants';
 
-import { TTraceLane } from 'src/modules/canvasChart/canvasChartTypings';
+import { TTraceLane } from 'src/modules/chart/chartTypings';
 import { TOption } from 'src/typings';
 
 import classes from './driverTelemetry.module.scss';

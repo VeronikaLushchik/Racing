@@ -5,7 +5,7 @@ import { useTheme } from '~@ui/common/themeContext';
 import { useTelemetryStore } from '../telemetry/useTelemetry';
 import { buildTraceChartData, buildTraceChartOption } from './traceChartFunctions';
 
-import { TTraceLane } from '../canvasChart/canvasChartTypings';
+import { TTraceLane } from './chartTypings';
 
 import classes from './traceChart.module.scss';
 

@@ -3,7 +3,7 @@ import type { EChartsCoreOption } from 'echarts/core';
 import { TelemetryRingBuffer } from '../telemetry/ringBuffer';
 
 import { TColorScheme } from '~@ui/common/themes';
-import { TTraceLane } from '../canvasChart/canvasChartTypings';
+import { TTraceLane } from './chartTypings';
 
 interface TTooltipParam {
 	seriesId: string;
