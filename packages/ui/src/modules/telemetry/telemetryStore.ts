@@ -145,6 +145,8 @@ export class TelemetryStore {
 			gLat: frame.gLat,
 			gLong: frame.gLong,
 			lapDistance: frame.lapDistance,
+			x: frame.x,
+			z: frame.z,
 		});
 		if (!this.currentTrace || this.currentTrace.lap !== frame.lap) {
 			this.previousTrace = this.currentTrace;

@@ -183,4 +183,14 @@
 	<entry key="pit.gainBasis">Based on {0} s per lap of degradation and tyres {1} laps old.</entry>
 	<entry key="pit.target">P{0} {1} is {2} s ahead: the undercut works if they stay out {3} more laps.</entry>
 	<entry key="pit.targetNever">P{0} {1} is {2} s ahead: without tyre degradation the undercut cannot work.</entry>
+	<entry key="miniMap.title">Track position</entry>
+	<entry key="miniMap.track">Track</entry>
+	<entry key="miniMap.auto">Auto: find by the car's position</entry>
+	<entry key="miniMap.autoFound">Auto: {0}</entry>
+	<entry key="miniMap.noTracks">No saved tracks yet. A track is saved here after its first clean lap.</entry>
+	<entry key="miniMap.notFound">No saved track matches the car's position. Pick one, or complete a clean lap.</entry>
+	<entry key="miniMap.byDistance">The car's coordinates don't fit this track, so it is placed by lap distance.</entry>
+	<entry key="miniMap.hint">Blue dot: the car. Orange ring: the point under the chart cursor.</entry>
+	<entry key="miniMap.name">Track name</entry>
+	<entry key="miniMap.forget">Forget</entry>
 </properties>

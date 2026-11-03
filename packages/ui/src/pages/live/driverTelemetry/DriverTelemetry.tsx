@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import TraceChart from 'src/modules/chart/TraceChart';
+import MiniTrackMap, { TMapCursor } from 'src/modules/trackLibrary/MiniTrackMap';
 import Panel from '~@ui/Panel/Panel';
 import SegmentedToggle from '~@ui/SegmentedToggle/SegmentedToggle';
 import GGDiagram from './GGDiagram';
@@ -8,7 +9,7 @@ import LiveReadout from './LiveReadout';
 import PedalBars from './PedalBars';
 
 import useTranslation from '~@engines/translations/useTranslation';
-import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
+import { useTelemetryMeta, useTelemetryStore } from 'src/modules/telemetry/useTelemetry';
 
 import { DEFAULT_TRACE_WINDOW_S, TRACE_WINDOWS_S } from './driverTelemetryConstants';
 
@@ -20,8 +21,32 @@ import classes from './driverTelemetry.module.scss';
 const DriverTelemetry: FC = () => {
 	const t = useTranslation();
 	const { session } = useTelemetryMeta();
+	const store = useTelemetryStore();
 
 	const [windowSeconds, setWindowSeconds] = useState<number>(DEFAULT_TRACE_WINDOW_S);
+	const [cursor, setCursor] = useState<TMapCursor | null>(null);
+
+	// The trace axis is "seconds before now": find the sample under the cursor in the buffer.
+	const handleCursor = useCallback(
+		(secondsAgo: number | null) => {
+			const { buffer } = store;
+			const tEnd = buffer.latest('t');
+			if (secondsAgo === null || tEnd === null || buffer.count === 0) {
+				setCursor(null);
+				return;
+			}
+			const index = Math.min(
+				buffer.count - 1,
+				buffer.firstIndexSince(tEnd + secondsAgo * 1000),
+			);
+			setCursor({
+				x: buffer.get('x', index),
+				z: buffer.get('z', index),
+				lapDistance: buffer.get('lapDistance', index),
+			});
+		},
+		[store],
+	);
 
 	const lanes = useMemo<TTraceLane[]>(
 		() => [
@@ -108,9 +133,13 @@ const DriverTelemetry: FC = () => {
 					lanes={lanes}
 					windowSeconds={windowSeconds}
 					ariaLabel={t('driver.traces')}
+					onCursor={handleCursor}
 				/>
 			</Panel>
 			<div className={classes.side_column}>
+				<Panel title={t('miniMap.title')}>
+					<MiniTrackMap cursor={cursor} />
+				</Panel>
 				<Panel title={t('driver.readout')}>
 					<LiveReadout />
 				</Panel>

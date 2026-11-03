@@ -6,6 +6,8 @@ import { LAP_CHANNELS, TLapChannel, TLapRecord } from './lapTypings';
 
 export const LAP_GRID_STEP_M = 2;
 const MIN_SAMPLE_GAP_M = 0.25;
+/** A lap whose first sample is further than this from the line was joined mid-lap, m. */
+const MAX_START_GAP_M = 50;
 
 /** Collects the frames of one lap and turns them into a `TLapRecord` when the lap ends. */
 export class LapRecorder {
@@ -57,7 +59,8 @@ export class LapRecorder {
 	}
 
 	finish(summary: TLapSummary): TLapRecord | null {
-		if (this.distance.length < 10) {
+		// Partial laps (the page opened mid-lap) would line up wrongly with full ones.
+		if (this.distance.length < 10 || this.distance[0] > MAX_START_GAP_M) {
 			return null;
 		}
 		const grid = buildDistanceGrid(this.distance[this.distance.length - 1], LAP_GRID_STEP_M);

@@ -1,0 +1,40 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+.mini_track_map {
+	@include flex-list;
+	gap: 8px;
+}
+
+.map,
+.placeholder {
+	width: 100%;
+	aspect-ratio: 4 / 3;
+}
+
+.placeholder {
+	border: 1px dashed $stroke_primary;
+	border-radius: 8px;
+}
+
+.hint {
+	margin: 0;
+
+	color: $text_secondary;
+	@extend %font-body-sm;
+
+	&[data-is-warning='true'] {
+		color: $system_warning;
+	}
+}
+
+.manage {
+	@include flex-list;
+	align-items: flex-start;
+	gap: 4px;
+
+	> :first-child {
+		align-self: stretch;
+	}
+}

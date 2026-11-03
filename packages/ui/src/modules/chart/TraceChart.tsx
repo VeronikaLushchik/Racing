@@ -14,15 +14,19 @@ interface TraceChartProps {
 	windowSeconds: number;
 	refreshHz?: number;
 	ariaLabel: string;
+	/** Cursor position on the time axis, seconds before now; null when it leaves the chart. */
+	onCursor?: (secondsAgo: number | null) => void;
 }
 
 const TraceChart: FC<TraceChartProps> = props => {
-	const { lanes, windowSeconds, refreshHz = 15, ariaLabel } = props;
+	const { lanes, windowSeconds, refreshHz = 15, ariaLabel, onCursor } = props;
 
 	const store = useTelemetryStore();
 	const theme = useTheme();
 
 	const containerRef = useRef<HTMLDivElement>(null);
+	const onCursorRef = useRef(onCursor);
+	onCursorRef.current = onCursor;
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -40,6 +44,12 @@ const TraceChart: FC<TraceChartProps> = props => {
 			});
 		});
 		observer.observe(container);
+
+		chart.on('updateAxisPointer', (event: unknown) => {
+			const value = (event as { axesInfo?: { value: number }[] }).axesInfo?.[0]?.value;
+			onCursorRef.current?.(value === undefined ? null : value);
+		});
+		chart.on('globalout', () => onCursorRef.current?.(null));
 
 		let lastVersion = -1;
 		const timer = window.setInterval(() => {
