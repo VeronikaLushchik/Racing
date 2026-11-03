@@ -23,7 +23,7 @@ $secondary_violet300: #c7a4ff;
 $secondary_orange400: #f2a93b;
 
 // Tokens. Values come from the active theme (ui/common/themes.ts) as CSS variables,
-// so canvases can read the same colours with getComputedStyle.
+// and charts read the same values through useTheme().
 
 // Surface
 $surface_primary: var(--surface-primary);

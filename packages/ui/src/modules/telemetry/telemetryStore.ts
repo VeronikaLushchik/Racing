@@ -47,7 +47,7 @@ type TListener = () => void;
 
 /**
  * Framework-free store for the telemetry stream. High-rate frames go into a ring buffer that
- * canvases read in their own animation loop; React only subscribes to `meta` and to throttled
+ * charts read on their own timer; React only subscribes to `meta` and to throttled
  * selectors, so 60 Hz data never causes 60 Hz re-renders.
  */
 export class TelemetryStore {

@@ -2,12 +2,12 @@
 
 Real-time sim-racing telemetry dashboard: a game or a real race feeds a small Node.js relay,
 the relay normalizes everything into one frame format and streams it over WebSocket to a React
-dashboard that draws 60 Hz traces on canvas without re-rendering React at 60 Hz.
+dashboard that charts 60 Hz telemetry with ECharts without re-rendering React at 60 Hz.
 
 ```
 Gran Turismo 7 (PS5, UDP + Salsa20) ─┐
 OpenF1 historical F1 races ──────────┤
-Demo circuit (synthetic) ────────────┼──► relay (Node.js) ──WebSocket──► dashboard (React + Canvas)
+Demo circuit (synthetic) ────────────┼──► relay (Node.js) ──WebSocket──► dashboard (React + ECharts)
 Recorded sessions (replay) ──────────┘        │
                                               └── records every live session to data/sessions
 ```
@@ -59,8 +59,8 @@ packages/
 
 Key ideas:
 - `relay/src/sources/*` — every source turns its data into `TTelemetryFrame` (`shared/src/telemetryTypings.ts`).
-- `ui/src/modules/telemetry/telemetryStore.ts` — frames go into a typed-array ring buffer; canvases read it in
-  `requestAnimationFrame` (`modules/canvasChart/useCanvasLoop.ts`), React subscribes only to throttled values.
+- `ui/src/modules/telemetry/telemetryStore.ts` — frames go into a typed-array ring buffer; ECharts charts read it
+  at 15 Hz (`modules/chart/TraceChart.tsx`, `GGDiagram.tsx`), React subscribes only to throttled values.
 - `ui/src/engines/racingMath/deltaModel.ts` — live delta to the best lap, interpolated by distance.
 
 ## Checks

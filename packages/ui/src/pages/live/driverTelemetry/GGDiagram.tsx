@@ -1,86 +1,57 @@
-import React, { FC, useRef } from 'react';
+import React, { FC, useEffect, useRef } from 'react';
 
-import useCanvasLoop, { TCanvasDrawArgs } from 'src/modules/canvasChart/useCanvasLoop';
-
-import { ggAxisLimit, trailAlpha } from './driverTelemetryFunctions';
-
-import { GG_TRAIL_MS } from './driverTelemetryConstants';
+import echarts from 'src/modules/chart/echartsCore';
+import { useTheme } from '~@ui/common/themeContext';
+import { useTelemetryStore } from 'src/modules/telemetry/useTelemetry';
+import { buildGGData, buildGGOption } from './ggDiagramFunctions';
 
 import classes from './driverTelemetry.module.scss';
 
 interface GGDiagramProps {
 	ariaLabel: string;
+	refreshHz?: number;
 }
 
-const draw = (args: TCanvasDrawArgs): void => {
-	const { ctx, width, height, store, color } = args;
-	const buffer = store.buffer;
-	const tEnd = buffer.latest('t') ?? 0;
-	const first = buffer.firstIndexSince(tEnd - GG_TRAIL_MS);
-
-	let maxAbs = 0;
-	for (let i = first; i < buffer.count; i += 1) {
-		maxAbs = Math.max(
-			maxAbs,
-			Math.abs(buffer.get('gLat', i)),
-			Math.abs(buffer.get('gLong', i)),
-		);
-	}
-	const limit = ggAxisLimit(maxAbs);
-	const size = Math.min(width, height);
-	const cx = width / 2;
-	const cy = height / 2;
-	const scale = (size / 2 - 14) / limit;
-
-	ctx.strokeStyle = color('--chart-grid');
-	ctx.fillStyle = color('--text-secondary');
-	ctx.font = '10px system-ui, sans-serif';
-	ctx.lineWidth = 1;
-	for (let g = 1; g <= limit; g += 1) {
-		ctx.beginPath();
-		ctx.arc(cx, cy, g * scale, 0, Math.PI * 2);
-		ctx.stroke();
-		ctx.fillText(`${g}G`, cx + g * scale * 0.71 + 2, cy - g * scale * 0.71);
-	}
-	ctx.beginPath();
-	ctx.moveTo(cx - limit * scale, cy);
-	ctx.lineTo(cx + limit * scale, cy);
-	ctx.moveTo(cx, cy - limit * scale);
-	ctx.lineTo(cx, cy + limit * scale);
-	ctx.stroke();
-
-	const accent = color('--stroke-active');
-	ctx.fillStyle = accent;
-	for (let i = first; i < buffer.count; i += 1) {
-		ctx.globalAlpha = trailAlpha(tEnd - buffer.get('t', i), GG_TRAIL_MS) * 0.6;
-		// Braking (negative longitudinal G) is drawn upwards, as engineers usually plot it.
-		const px = cx + buffer.get('gLat', i) * scale;
-		const py = cy + buffer.get('gLong', i) * scale;
-		ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
-	}
-	ctx.globalAlpha = 1;
-
-	const lat = buffer.latest('gLat');
-	const long = buffer.latest('gLong');
-	if (lat !== null && long !== null) {
-		ctx.beginPath();
-		ctx.arc(cx + lat * scale, cy + long * scale, 5, 0, Math.PI * 2);
-		ctx.fillStyle = color('--text-primary');
-		ctx.fill();
-	}
-};
-
 const GGDiagram: FC<GGDiagramProps> = props => {
-	const { ariaLabel } = props;
+	const { ariaLabel, refreshHz = 15 } = props;
 
-	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const store = useTelemetryStore();
+	const theme = useTheme();
 
-	useCanvasLoop(canvasRef, draw);
+	const containerRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) {
+			return undefined;
+		}
+
+		const chart = echarts.init(container, undefined, { renderer: 'canvas' });
+		chart.setOption(buildGGOption(theme));
+
+		const observer = new ResizeObserver(() => chart.resize());
+		observer.observe(container);
+
+		let lastVersion = -1;
+		const timer = window.setInterval(() => {
+			if (store.frameVersion === lastVersion) {
+				return;
+			}
+			lastVersion = store.frameVersion;
+			chart.setOption(buildGGData(store.buffer), { lazyUpdate: true });
+		}, 1000 / refreshHz);
+
+		return () => {
+			window.clearInterval(timer);
+			observer.disconnect();
+			chart.dispose();
+		};
+	}, [theme, store, refreshHz]);
 
 	return (
-		<canvas
-			ref={canvasRef}
-			className={classes.gg_canvas}
+		<div
+			ref={containerRef}
+			className={classes.gg_chart}
 			role="img"
 			aria-label={ariaLabel}
 		/>
