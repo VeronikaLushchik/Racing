@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.test-dist/
+*.tsbuildinfo
+data/sessions/
+data/f1/
+.env.*.local
+.DS_Store
+.test-dist/
