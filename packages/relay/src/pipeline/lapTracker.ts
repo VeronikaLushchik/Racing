@@ -1,5 +1,3 @@
-/** @format */
-
 import { TLapSummary, TTelemetryFrame } from '@racing/shared';
 
 /**

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC } from 'react';
 
 import useTranslation from '~@engines/translations/useTranslation';

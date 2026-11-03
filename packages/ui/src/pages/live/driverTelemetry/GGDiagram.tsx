@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, useRef } from 'react';
 
 import useCanvasLoop, { TCanvasDrawArgs } from 'src/modules/canvasChart/useCanvasLoop';

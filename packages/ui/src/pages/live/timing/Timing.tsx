@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, useMemo } from 'react';
 
 import Panel from '~@ui/Panel/Panel';

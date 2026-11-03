@@ -1,5 +1,3 @@
-/** @format */
-
 export interface TF1Session {
 	session_key: number;
 	country_name: string;

@@ -1,5 +1,3 @@
-/** @format */
-
 import { useContext, useSyncExternalStore } from 'react';
 
 import { TTelemetryFrame } from '@racing/shared';

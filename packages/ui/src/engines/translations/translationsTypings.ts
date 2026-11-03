@@ -1,5 +1,3 @@
-/** @format */
-
 // TTranslationKey is global, generated into src/translations.d.ts from translations/en.xml.
 
 export type TLanguage = 'en' | 'uk';

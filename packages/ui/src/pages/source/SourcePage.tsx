@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 

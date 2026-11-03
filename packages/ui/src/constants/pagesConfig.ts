@@ -1,5 +1,3 @@
-/** @format */
-
 import CarHealth from 'src/pages/live/carHealth/CarHealth';
 import DriverTelemetry from 'src/pages/live/driverTelemetry/DriverTelemetry';
 import Timing from 'src/pages/live/timing/Timing';

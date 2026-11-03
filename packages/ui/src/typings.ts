@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ComponentType } from 'react';
 
 export interface TPageTab {

@@ -1,5 +1,3 @@
-/** @format */
-
 import { createContext } from 'react';
 
 import { emptyFunction } from '../../services/functions';

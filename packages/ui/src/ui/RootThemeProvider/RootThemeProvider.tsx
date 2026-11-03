@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, useLayoutEffect, useMemo } from 'react';
 
 import themeContext, { TThemeContext } from '../common/themeContext';

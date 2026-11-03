@@ -1,5 +1,3 @@
-/** @format */
-
 import { RELAY_DEFAULT_PORT } from '@racing/shared';
 
 const defaultRelay = `http://${window.location.hostname || 'localhost'}:${RELAY_DEFAULT_PORT}`;

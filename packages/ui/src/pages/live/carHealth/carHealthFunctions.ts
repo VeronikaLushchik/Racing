@@ -1,5 +1,3 @@
-/** @format */
-
 export type TTempState = 'cold' | 'optimal' | 'hot';
 
 export const temperatureState = (

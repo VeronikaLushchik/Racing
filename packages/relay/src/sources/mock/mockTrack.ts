@@ -1,5 +1,3 @@
-/** @format */
-
 const G = 9.81;
 const TOP_SPEED_MS = 82; // ~295 km/h
 const MAX_LAT_G = 1.7;

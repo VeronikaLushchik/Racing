@@ -1,5 +1,3 @@
-/** @format */
-
 /** Axis limit for the G-G diagram: whole G above the largest value seen, at least 2 G. */
 export const ggAxisLimit = (maxAbsG: number): number => Math.max(2, Math.ceil(maxAbsG + 0.1));
 

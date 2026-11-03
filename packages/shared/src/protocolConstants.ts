@@ -1,5 +1,3 @@
-/** @format */
-
 export const PROTOCOL_VERSION = 1;
 export const RELAY_DEFAULT_PORT = 8787;
 /** Rate at which the relay pushes frames to browsers. */

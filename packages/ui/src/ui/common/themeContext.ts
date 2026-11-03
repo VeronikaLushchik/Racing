@@ -1,5 +1,3 @@
-/** @format */
-
 import { createContext, useContext } from 'react';
 
 import { TColorScheme, darkTheme } from './themes';

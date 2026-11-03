@@ -1,5 +1,3 @@
-/** @format */
-
 import {
 	RELAY_FRAME_HZ,
 	TClientMessage,

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useMemo } from 'react';
 
 import { compositeClassNames } from '../../services/functions';

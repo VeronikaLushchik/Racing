@@ -1,5 +1,3 @@
-/** @format */
-
 import { TTranslationDictionary } from './translationsTypings';
 
 /** Looks a key up in the active dictionary, then in the fallback one, then returns the key. */

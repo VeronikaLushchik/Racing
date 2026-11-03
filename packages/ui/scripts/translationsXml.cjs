@@ -1,5 +1,3 @@
-/** @format */
-
 // Reads and writes translation dictionaries in the XML properties format:
 // <properties><entry key="pagesNames.live.driverTab">Driver</entry></properties>
 // Shared by the Vite loader, the key typings generator and the tests (no dependencies).

@@ -1,5 +1,3 @@
-/** @format */
-
 import { TClientMessage, TServerMessage } from '@racing/shared';
 
 import { TelemetryStore } from 'src/modules/telemetry/telemetryStore';

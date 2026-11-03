@@ -1,5 +1,3 @@
-/** @format */
-
 /**
  * Row shapes of the OpenF1 REST API (https://openf1.org), historical data is free and needs
  * no key. Only the fields this project uses are listed.

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, ReactNode } from 'react';
 import { QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';

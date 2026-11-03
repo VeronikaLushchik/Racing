@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import { safeStorage } from '../../services/functions';

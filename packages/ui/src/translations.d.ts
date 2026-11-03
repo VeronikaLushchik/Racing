@@ -1,5 +1,3 @@
-/** @format */
-
 // Generated from src/translations/en.xml by scripts/generateTranslationKeys.cjs. Do not edit.
 
 type TTranslationKey =

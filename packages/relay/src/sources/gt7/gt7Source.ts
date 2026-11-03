@@ -1,5 +1,3 @@
-/** @format */
-
 import dgram from 'dgram';
 
 import { GT7_RECEIVE_PORT, GT7_SEND_PORT, TSourceOptions } from '@racing/shared';

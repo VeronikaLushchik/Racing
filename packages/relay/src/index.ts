@@ -1,5 +1,3 @@
-/** @format */
-
 import path from 'path';
 
 import { RELAY_DEFAULT_PORT } from '@racing/shared';

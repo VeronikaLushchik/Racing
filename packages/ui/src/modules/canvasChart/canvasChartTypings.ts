@@ -1,5 +1,3 @@
-/** @format */
-
 import { TTraceChannel } from 'src/modules/telemetry/ringBuffer';
 
 export interface TTraceSeries {

@@ -1,5 +1,3 @@
-/** @format */
-
 export class ServerStatusError extends Error {
 	constructor(
 		readonly status: number,

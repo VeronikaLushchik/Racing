@@ -1,5 +1,3 @@
-/** @format */
-
 export const TRACE_CHANNELS = [
 	't',
 	'speed',

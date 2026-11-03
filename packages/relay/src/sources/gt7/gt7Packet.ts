@@ -1,5 +1,3 @@
-/** @format */
-
 import { salsa20Xor } from './salsa20';
 import {
 	GT7_FLAGS,

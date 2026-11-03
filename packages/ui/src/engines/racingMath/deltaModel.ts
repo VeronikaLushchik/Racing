@@ -1,5 +1,3 @@
-/** @format */
-
 /** Distance → elapsed-time trace of one lap, used for the live delta and later the ghost lap. */
 export class LapTrace {
 	readonly distance: number[] = [];

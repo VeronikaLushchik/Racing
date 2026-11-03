@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC } from 'react';
 
 import Layout from './Layout/Layout';

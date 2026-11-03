@@ -1,5 +1,3 @@
-/** @format */
-
 export type TColorScheme = Record<string, string>;
 
 /** Dark scheme. Each key becomes a CSS variable on <html> (see RootThemeProvider). */

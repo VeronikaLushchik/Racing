@@ -1,5 +1,3 @@
-/** @format */
-
 // Generates src/translations.d.ts (the global TTranslationKey union) from translations/en.xml.
 // Run after adding or removing keys: npm run translations:keys -w @racing/ui
 
@@ -14,8 +12,6 @@ const TARGET = path.join(__dirname, '../src/translations.d.ts');
 const buildTranslationKeysFile = xml => {
 	const keys = Object.keys(parseTranslationsXml(xml)).sort();
 	return [
-		'/** @format */',
-		'',
 		'// Generated from src/translations/en.xml by scripts/generateTranslationKeys.cjs. Do not edit.',
 		'',
 		'type TTranslationKey =',

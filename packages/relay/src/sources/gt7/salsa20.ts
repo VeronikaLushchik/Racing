@@ -1,5 +1,3 @@
-/** @format */
-
 /**
  * Minimal Salsa20/20 stream cipher (256-bit key, 64-bit nonce), as used by GT7 telemetry.
  * `node:crypto` ships ChaCha20 but not Salsa20, and this is ~60 lines, so no dependency.

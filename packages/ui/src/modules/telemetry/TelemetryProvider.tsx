@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { TClientMessage } from '@racing/shared';

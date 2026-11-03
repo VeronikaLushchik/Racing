@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC } from 'react';
 
 import { compositeClassNames } from '../../services/functions';

@@ -8,6 +8,5 @@
 	"printWidth": 100,
 	"arrowParens": "avoid",
 	"bracketSpacing": true,
-	"singleAttributePerLine": true,
-	"requirePragma": true
+	"singleAttributePerLine": true
 }

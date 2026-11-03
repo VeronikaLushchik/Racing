@@ -1,5 +1,3 @@
-/** @format */
-
 import path from 'path';
 
 import { OpenF1Client } from '../sources/openf1/openf1Client';

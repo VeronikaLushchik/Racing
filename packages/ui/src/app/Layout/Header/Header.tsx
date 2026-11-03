@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 
