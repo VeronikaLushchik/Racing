@@ -3,6 +3,7 @@ import { LineChart, ScatterChart } from 'echarts/charts';
 import {
 	AxisPointerComponent,
 	GridComponent,
+	MarkAreaComponent,
 	MarkLineComponent,
 	TooltipComponent,
 	VisualMapContinuousComponent,
@@ -16,6 +17,7 @@ echarts.use([
 	GridComponent,
 	TooltipComponent,
 	AxisPointerComponent,
+	MarkAreaComponent,
 	MarkLineComponent,
 	VisualMapContinuousComponent,
 	CanvasRenderer,

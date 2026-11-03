@@ -3,6 +3,8 @@ import TrackMap from 'src/pages/analysis/trackMap/TrackMap';
 import CarHealth from 'src/pages/live/carHealth/CarHealth';
 import DriverTelemetry from 'src/pages/live/driverTelemetry/DriverTelemetry';
 import Timing from 'src/pages/live/timing/Timing';
+import PitWindow from 'src/pages/strategy/pitWindow/PitWindow';
+import TyreDegradation from 'src/pages/strategy/tyreDegradation/TyreDegradation';
 import SourcePage from 'src/pages/source/SourcePage';
 
 import { TPagesConfig } from 'src/typings';
@@ -56,6 +58,25 @@ export const pagesConfig: TPagesConfig = {
 				tKey: 'pagesNames.analysis.trackMapTab',
 				path: '/track-map',
 				Component: TrackMap,
+			},
+		},
+	},
+	strategy: {
+		path: '/strategy',
+		title: 'Strategy',
+		tKey: 'pagesNames.strategy.strategy',
+		tabs: {
+			tyreDegradation: {
+				title: 'Tyre degradation',
+				tKey: 'pagesNames.strategy.degradationTab',
+				path: '/tyre-degradation',
+				Component: TyreDegradation,
+			},
+			pitWindow: {
+				title: 'Pit window',
+				tKey: 'pagesNames.strategy.pitTab',
+				path: '/pit-window',
+				Component: PitWindow,
 			},
 		},
 	},
