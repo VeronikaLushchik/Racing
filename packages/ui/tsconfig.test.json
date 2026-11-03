@@ -18,6 +18,8 @@
 		"src/pages/live/driverTelemetry/driverTelemetryFunctions.ts",
 		"src/engines/racingMath/distanceResampling.ts",
 		"src/engines/racingMath/ghostLapModel.ts",
-		"src/engines/racingMath/trackMapModel.ts"
+		"src/engines/racingMath/trackMapModel.ts",
+		"src/engines/racingMath/tyreDegradationModel.ts",
+		"src/engines/racingMath/pitWindowModel.ts"
 	]
 }
