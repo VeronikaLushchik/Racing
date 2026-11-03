@@ -11,10 +11,14 @@ import {
 
 import { computeDelta, LapTrace } from '~@engines/racingMath/deltaModel';
 
+import { LapRecorder } from './lapRecorder';
 import { TelemetryRingBuffer } from './ringBuffer';
+
+import { TLapRecord } from './lapTypings';
 
 const BUFFER_SECONDS = 120;
 const BUFFER_HZ = 60;
+const MAX_LAP_RECORDS = 80;
 
 export type TConnectionState = 'connecting' | 'open' | 'closed';
 
@@ -27,6 +31,8 @@ export interface TTelemetryMeta {
 	relayMessage: string | null;
 	session: TSessionInfo | null;
 	laps: TLapSummary[];
+	/** Laps completed while this page was open, resampled by distance (analysis, strategy). */
+	lapRecords: TLapRecord[];
 	field: TFieldEntry[];
 	bestLapMs: number | null;
 }
@@ -39,6 +45,7 @@ const initialMeta: TTelemetryMeta = {
 	relayMessage: null,
 	session: null,
 	laps: [],
+	lapRecords: [],
 	field: [],
 	bestLapMs: null,
 };
@@ -61,6 +68,7 @@ export class TelemetryStore {
 	private currentTrace: LapTrace | null = null;
 	private previousTrace: LapTrace | null = null;
 	private referenceTrace: LapTrace | null = null;
+	private readonly lapRecorders = new Map<number, LapRecorder>();
 
 	getMeta = (): TTelemetryMeta => this.meta;
 
@@ -117,7 +125,8 @@ export class TelemetryStore {
 			this.currentTrace = null;
 			this.previousTrace = null;
 			this.referenceTrace = null;
-			this.updateMeta({ session, laps: [], field: [], bestLapMs: null });
+			this.lapRecorders.clear();
+			this.updateMeta({ session, laps: [], lapRecords: [], field: [], bestLapMs: null });
 		} else {
 			this.updateMeta({ session });
 		}
@@ -142,6 +151,17 @@ export class TelemetryStore {
 			this.currentTrace = new LapTrace(frame.lap);
 		}
 		this.currentTrace.push(frame.lapDistance, frame.lapTimeMs);
+
+		let recorder = this.lapRecorders.get(frame.lap);
+		if (!recorder) {
+			recorder = new LapRecorder(frame.lap);
+			this.lapRecorders.set(frame.lap, recorder);
+			// The lap message for lap N arrives after lap N+1 started; older recorders are stale.
+			this.lapRecorders.forEach((_, lap) => {
+				if (lap < frame.lap - 1) this.lapRecorders.delete(lap);
+			});
+		}
+		recorder.push(frame);
 	}
 
 	private handleLap(lap: TLapSummary): void {
@@ -154,7 +174,18 @@ export class TelemetryStore {
 			const trace = [this.previousTrace, this.currentTrace].find(tr => tr?.lap === lap.lap);
 			if (trace && trace.length > 10) this.referenceTrace = trace;
 		}
-		this.updateMeta({ laps, bestLapMs: isNewBest ? lap.lapTimeMs : this.meta.bestLapMs });
+		const record = this.lapRecorders.get(lap.lap)?.finish(lap) ?? null;
+		this.lapRecorders.delete(lap.lap);
+		const lapRecords = record
+			? [...this.meta.lapRecords.filter(r => r.lap !== lap.lap), record]
+					.sort((a, b) => a.lap - b.lap)
+					.slice(-MAX_LAP_RECORDS)
+			: this.meta.lapRecords;
+		this.updateMeta({
+			laps,
+			lapRecords,
+			bestLapMs: isNewBest ? lap.lapTimeMs : this.meta.bestLapMs,
+		});
 	}
 
 	private updateMeta(patch: Partial<TTelemetryMeta>): void {

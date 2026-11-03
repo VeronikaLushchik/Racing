@@ -15,6 +15,9 @@
 		"src/engines/racingMath/deltaModel.ts",
 		"src/pages/live/timing/timingFunctions.ts",
 		"src/pages/live/carHealth/carHealthFunctions.ts",
-		"src/pages/live/driverTelemetry/driverTelemetryFunctions.ts"
+		"src/pages/live/driverTelemetry/driverTelemetryFunctions.ts",
+		"src/engines/racingMath/distanceResampling.ts",
+		"src/engines/racingMath/ghostLapModel.ts",
+		"src/engines/racingMath/trackMapModel.ts"
 	]
 }

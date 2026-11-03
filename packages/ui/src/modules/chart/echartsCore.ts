@@ -1,6 +1,12 @@
 import * as echarts from 'echarts/core';
 import { LineChart, ScatterChart } from 'echarts/charts';
-import { AxisPointerComponent, GridComponent, TooltipComponent } from 'echarts/components';
+import {
+	AxisPointerComponent,
+	GridComponent,
+	MarkLineComponent,
+	TooltipComponent,
+	VisualMapContinuousComponent,
+} from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 
 // Only the parts the dashboard uses, so the bundle stays small.
@@ -10,6 +16,8 @@ echarts.use([
 	GridComponent,
 	TooltipComponent,
 	AxisPointerComponent,
+	MarkLineComponent,
+	VisualMapContinuousComponent,
 	CanvasRenderer,
 ]);
 

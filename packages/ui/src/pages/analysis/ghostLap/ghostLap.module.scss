@@ -1,0 +1,116 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+.ghost_lap {
+	@include flex-list;
+	gap: 16px;
+}
+
+.toolbar {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(180px, 1.4fr)) repeat(3, minmax(0, 1fr));
+	align-items: end;
+	gap: 12px;
+
+	@media all and (max-width: $tabletBreakpoint) {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.stat {
+	@include flex-list;
+	gap: 4px;
+
+	padding: 8px 16px;
+
+	@extend %card;
+}
+
+.stat_label {
+	color: $text_secondary;
+	@extend %font-body-sm;
+}
+
+.stat_value {
+	@extend %font-numeric-md;
+
+	&[data-role='reference'] {
+		color: $chart_ghost;
+	}
+}
+
+[data-delta='faster'] {
+	color: $system_success;
+}
+
+[data-delta='slower'] {
+	color: $system_dangerous;
+}
+
+.overlay > div:last-child {
+	flex: none;
+	height: 600px;
+
+	@media all and (max-width: $mobileBreakpoint) {
+		height: 480px;
+	}
+}
+
+.compare_chart {
+	width: 100%;
+	height: 100%;
+}
+
+.table_wrap {
+	overflow: auto;
+
+	@extend %scrollbar-sm;
+}
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+
+	@extend %font-numeric-sm;
+
+	th {
+		color: $text_secondary;
+		text-align: start;
+		@extend %font-label-md;
+	}
+
+	th,
+	td {
+		padding: 6px 8px;
+
+		border-bottom: 1px solid $chart_grid;
+
+		white-space: nowrap;
+	}
+}
+
+.insight_cell {
+	width: 100%;
+
+	white-space: normal;
+	@extend %font-body-sm;
+}
+
+.muted {
+	color: $text_secondary;
+}
+
+.empty_text {
+	margin: 0;
+
+	color: $text_secondary;
+}
+
+.empty_hint {
+	margin: 8px 0 0;
+
+	color: $text_disabled;
+	@extend %font-body-sm;
+}
