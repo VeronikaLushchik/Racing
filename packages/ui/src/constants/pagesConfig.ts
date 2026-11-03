@@ -1,3 +1,5 @@
+import GhostLap from 'src/pages/analysis/ghostLap/GhostLap';
+import TrackMap from 'src/pages/analysis/trackMap/TrackMap';
 import CarHealth from 'src/pages/live/carHealth/CarHealth';
 import DriverTelemetry from 'src/pages/live/driverTelemetry/DriverTelemetry';
 import Timing from 'src/pages/live/timing/Timing';
@@ -35,6 +37,25 @@ export const pagesConfig: TPagesConfig = {
 				tKey: 'pagesNames.live.timingTab',
 				path: '/timing',
 				Component: Timing,
+			},
+		},
+	},
+	analysis: {
+		path: '/analysis',
+		title: 'Analysis',
+		tKey: 'pagesNames.analysis.analysis',
+		tabs: {
+			ghostLap: {
+				title: 'Ghost lap',
+				tKey: 'pagesNames.analysis.ghostTab',
+				path: '/ghost-lap',
+				Component: GhostLap,
+			},
+			trackMap: {
+				title: 'Track map',
+				tKey: 'pagesNames.analysis.trackMapTab',
+				path: '/track-map',
+				Component: TrackMap,
 			},
 		},
 	},

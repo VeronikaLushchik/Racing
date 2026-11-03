@@ -33,6 +33,8 @@ export const darkTheme: TColorScheme = {
 	'--chart-brake': '#ef4b4b',
 	'--chart-gear': '#c7a4ff',
 	'--chart-rpm': '#f2a93b',
+	'--chart-ghost': '#8b98a5',
+	'--chart-delta': '#f2a93b',
 
 	'--sector-purple': '#a55cff',
 	'--sector-green': '#2fbf71',

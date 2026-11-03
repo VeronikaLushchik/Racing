@@ -35,22 +35,31 @@ export const formatTraceTooltip = (params: TTooltipParam[], lanes: TTraceLane[])
 	return header + rows.join('');
 };
 
+/** Stacked grids, one per lane, heights proportional to `weight`. */
+export const buildLaneGrids = (
+	lanes: { weight: number }[],
+	height: number,
+	topPadding = TOP_PADDING,
+): { left: number; right: number; top: number; height: number }[] => {
+	const totalWeight = lanes.reduce((sum, lane) => sum + lane.weight, 0);
+	const usable = height - topPadding - BOTTOM_PADDING - LANE_GAP * (lanes.length - 1);
+	let top = topPadding;
+
+	return lanes.map(lane => {
+		const laneHeight = (usable * lane.weight) / totalWeight;
+		const item = { left: 56, right: 16, top, height: laneHeight };
+		top += laneHeight + LANE_GAP;
+		return item;
+	});
+};
+
 /** Static part of the option: one grid per lane, all sharing a time axis in seconds. */
 export const buildTraceChartOption = (
 	lanes: TTraceLane[],
 	theme: TColorScheme,
 	height: number,
 ): EChartsCoreOption => {
-	const totalWeight = lanes.reduce((sum, lane) => sum + lane.weight, 0);
-	const usable = height - TOP_PADDING - BOTTOM_PADDING - LANE_GAP * (lanes.length - 1);
-	let top = TOP_PADDING;
-
-	const grid = lanes.map(lane => {
-		const laneHeight = (usable * lane.weight) / totalWeight;
-		const item = { left: 56, right: 16, top, height: laneHeight };
-		top += laneHeight + LANE_GAP;
-		return item;
-	});
+	const grid = buildLaneGrids(lanes, height);
 
 	const axisLine = { lineStyle: { color: theme['--chart-grid'] } };
 	const axisLabel = { color: theme['--text-secondary'], fontSize: 10 };

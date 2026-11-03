@@ -1,0 +1,77 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+.track_map {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 300px;
+	align-items: start;
+	gap: 16px;
+
+	@media all and (max-width: $tabletBreakpoint) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.map_panel > div:last-child {
+	flex: none;
+	height: 640px;
+
+	@media all and (max-width: $mobileBreakpoint) {
+		height: 420px;
+	}
+}
+
+.track_chart {
+	width: 100%;
+	height: 100%;
+}
+
+.side_column {
+	@include flex-list;
+	gap: 16px;
+}
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+
+	@extend %font-numeric-sm;
+
+	th {
+		color: $text_secondary;
+		text-align: start;
+		@extend %font-label-md;
+	}
+
+	th,
+	td {
+		padding: 4px 8px;
+
+		border-bottom: 1px solid $chart_grid;
+	}
+}
+
+.lap_time {
+	margin: 0;
+
+	@extend %font-numeric-md;
+}
+
+.empty_text {
+	margin: 0;
+
+	color: $text_secondary;
+}
+
+.empty_hint {
+	margin: 0;
+
+	color: $text_disabled;
+	@extend %font-body-sm;
+}
+
+.empty_text + .empty_hint {
+	margin-top: 8px;
+}
