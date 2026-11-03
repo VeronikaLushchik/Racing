@@ -2,8 +2,6 @@
 
 import React, { ComponentType } from 'react';
 
-import { TTranslationKey } from '~@engines/translations/translationsTypings';
-
 export interface TPageTab {
 	title: string;
 	tKey: TTranslationKey;

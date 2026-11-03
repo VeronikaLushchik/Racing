@@ -9,12 +9,12 @@ import translationsContext, { TTranslationsContext } from './translationsContext
 
 import { LANGUAGE_STORAGE_KEY } from '../../constants/commonConstants';
 
-import { TLanguage } from './translationsTypings';
+import { TLanguage, TTranslationDictionary } from './translationsTypings';
 
-import en from 'src/translations/en.json';
-import uk from 'src/translations/uk.json';
+import en from 'src/translations/en.xml';
+import uk from 'src/translations/uk.xml';
 
-const DICTIONARIES: Record<TLanguage, unknown> = { en, uk };
+const DICTIONARIES: Record<TLanguage, TTranslationDictionary> = { en, uk };
 
 const getInitialLanguage = (): TLanguage => {
 	const stored = safeStorage.get(LANGUAGE_STORAGE_KEY);

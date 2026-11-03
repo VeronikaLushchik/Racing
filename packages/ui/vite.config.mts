@@ -1,14 +1,30 @@
 /** @format */
 
+import fs from 'fs';
+import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const { parseTranslationsXml } = createRequire(import.meta.url)('./scripts/translationsXml.cjs');
+
+/** Imports translations/*.xml as a flat { key: text } dictionary. */
+const translationsXml = (): Plugin => ({
+	name: 'racing-translations-xml',
+	load(id) {
+		if (!id.endsWith('.xml')) {
+			return null;
+		}
+		const dictionary = parseTranslationsXml(fs.readFileSync(id, 'utf8'));
+		return `export default ${JSON.stringify(dictionary)};`;
+	},
+});
+
 export default defineConfig({
-	plugins: [react()],
+	plugins: [react(), translationsXml()],
 	base: process.env.UI_BASE ?? '/',
 	resolve: {
 		alias: {
