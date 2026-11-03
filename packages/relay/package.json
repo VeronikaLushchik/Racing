@@ -1,0 +1,22 @@
+{
+	"name": "@racing/relay",
+	"version": "0.1.0",
+	"private": true,
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"start": "npm run build && node dist/index.js",
+		"fake-gt7": "npm run build && node dist/tools/fakeGt7Console.js",
+		"f1:fetch": "npm run build && node dist/tools/fetchF1Session.js",
+		"test:unit": "npm run build && node --test scripts/*.test.cjs"
+	},
+	"dependencies": {
+		"@racing/shared": "0.1.0",
+		"ws": "^8.18.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.14.0",
+		"@types/ws": "^8.5.12"
+	}
+}

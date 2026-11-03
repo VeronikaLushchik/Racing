@@ -1,0 +1,142 @@
+/** @format */
+
+@import 'src/ui/common/variables';
+
+.root {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 320px;
+	gap: $space-4;
+
+	@media (max-width: 960px) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.traces {
+	min-height: 560px;
+
+	> div:last-child {
+		height: 520px;
+	}
+
+	@media (max-width: 640px) {
+		min-height: 420px;
+
+		> div:last-child {
+			height: 380px;
+		}
+	}
+}
+
+.side {
+	display: flex;
+	flex-direction: column;
+	gap: $space-4;
+}
+
+.readout {
+	display: flex;
+	gap: $space-4;
+	align-items: stretch;
+}
+
+.gear {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-width: 72px;
+	border: 1px solid var(--color-border);
+	border-radius: $radius;
+}
+
+.gearValue {
+	font-family: $font-mono;
+	font-size: 44px;
+	font-weight: 700;
+	color: var(--color-gear);
+}
+
+.readoutGrid {
+	flex: 1;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: $space-2 $space-3;
+
+	> div {
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+.readoutLabel {
+	font-size: 11px;
+	color: var(--color-text-secondary);
+}
+
+.readoutValue {
+	font-family: $font-mono;
+	font-size: 18px;
+	font-variant-numeric: tabular-nums;
+
+	&[data-delta='faster'] {
+		color: var(--color-status-ok);
+	}
+
+	&[data-delta='slower'] {
+		color: var(--color-status-error);
+	}
+}
+
+.readoutUnit {
+	font-size: 11px;
+	color: var(--color-text-secondary);
+}
+
+.pedals {
+	display: flex;
+	justify-content: center;
+	gap: $space-6;
+}
+
+.pedal {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: $space-1;
+	font-size: 12px;
+	color: var(--color-text-secondary);
+}
+
+.pedalTrack {
+	position: relative;
+	width: 36px;
+	height: 120px;
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+	overflow: hidden;
+	background: var(--color-bg);
+}
+
+.pedalFill {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 0;
+	height: 0;
+
+	&[data-pedal='throttle'] {
+		background: var(--color-throttle);
+	}
+
+	&[data-pedal='brake'] {
+		background: var(--color-brake);
+	}
+}
+
+.ggCanvas {
+	display: block;
+	width: 100%;
+	max-width: 320px;
+	margin: 0 auto;
+	aspect-ratio: 1;
+}

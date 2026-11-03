@@ -1,0 +1,122 @@
+/** @format */
+
+@import 'src/ui/common/variables';
+
+.root {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+	gap: $space-4;
+
+	> :first-child {
+		grid-row: span 2;
+	}
+
+	@media (max-width: 860px) {
+		grid-template-columns: minmax(0, 1fr);
+
+		> :first-child {
+			grid-row: auto;
+		}
+	}
+}
+
+[data-temp-state='cold'] {
+	--temp-color: var(--color-temp-cold);
+}
+
+[data-temp-state='optimal'] {
+	--temp-color: var(--color-temp-optimal);
+}
+
+[data-temp-state='hot'] {
+	--temp-color: var(--color-temp-hot);
+}
+
+.car {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: $space-6 $space-6;
+	max-width: 480px;
+	margin: 0 auto;
+}
+
+.tyre {
+	display: flex;
+	flex-direction: column;
+	gap: $space-1;
+}
+
+.wheelLabel {
+	font-size: 12px;
+	color: var(--color-text-secondary);
+}
+
+.tread {
+	display: flex;
+	gap: 2px;
+	height: 120px;
+}
+
+.zone {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 6px;
+	font-family: $font-mono;
+	font-weight: 600;
+	background: color-mix(
+		in srgb,
+		var(--temp-color, var(--color-border)) 35%,
+		var(--color-surface)
+	);
+	border: 1px solid var(--temp-color, var(--color-border));
+}
+
+.wear {
+	font-size: 12px;
+	color: var(--color-text-secondary);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: $space-4;
+	margin: $space-4 0 0;
+	font-size: 12px;
+
+	span::before {
+		content: '';
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		margin-inline-end: $space-1;
+		border-radius: 2px;
+		background: var(--temp-color);
+	}
+}
+
+.brakes {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: $space-3;
+}
+
+.brake {
+	display: flex;
+	flex-direction: column;
+	padding: $space-2 $space-3;
+	border-radius: $radius;
+	border-inline-start: 4px solid var(--temp-color, var(--color-border));
+	background: var(--color-surface-raised);
+}
+
+.brakeValue {
+	font-family: $font-mono;
+	font-size: 20px;
+}
+
+.empty {
+	margin: 0;
+	color: var(--color-text-secondary);
+}
