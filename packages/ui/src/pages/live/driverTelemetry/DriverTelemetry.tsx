@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 
-import CanvasTrace from 'src/modules/canvasChart/CanvasTrace';
+import TraceChart from 'src/modules/chart/TraceChart';
 import Panel from '~@ui/Panel/Panel';
 import SegmentedToggle from '~@ui/SegmentedToggle/SegmentedToggle';
 import GGDiagram from './GGDiagram';
@@ -12,7 +12,7 @@ import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
 
 import { DEFAULT_TRACE_WINDOW_S, TRACE_WINDOWS_S } from './driverTelemetryConstants';
 
-import { TTraceLane } from 'src/modules/canvasChart/canvasChartTypings';
+import { TTraceLane } from 'src/modules/chart/chartTypings';
 import { TOption } from 'src/typings';
 
 import classes from './driverTelemetry.module.scss';
@@ -31,7 +31,7 @@ const DriverTelemetry: FC = () => {
 				min: 0,
 				max: 360,
 				weight: 3,
-				series: [{ channel: 'speed', colorVar: '--chart-speed' }],
+				series: [{ channel: 'speed', label: t('driver.speed'), colorVar: '--chart-speed' }],
 			},
 			{
 				id: 'pedals',
@@ -40,8 +40,12 @@ const DriverTelemetry: FC = () => {
 				max: 1,
 				weight: 2,
 				series: [
-					{ channel: 'throttle', colorVar: '--chart-throttle' },
-					{ channel: 'brake', colorVar: '--chart-brake' },
+					{
+						channel: 'throttle',
+						label: t('driver.throttle'),
+						colorVar: '--chart-throttle',
+					},
+					{ channel: 'brake', label: t('driver.brake'), colorVar: '--chart-brake' },
 				],
 				format: value => `${Math.round(value * 100)}%`,
 			},
@@ -51,7 +55,14 @@ const DriverTelemetry: FC = () => {
 				min: 0,
 				max: 8,
 				weight: 1.2,
-				series: [{ channel: 'gear', colorVar: '--chart-gear', isStep: true }],
+				series: [
+					{
+						channel: 'gear',
+						label: t('driver.gear'),
+						colorVar: '--chart-gear',
+						isStep: true,
+					},
+				],
 			},
 			{
 				id: 'rpm',
@@ -59,7 +70,7 @@ const DriverTelemetry: FC = () => {
 				min: 0,
 				max: 13000,
 				weight: 1.5,
-				series: [{ channel: 'rpm', colorVar: '--chart-rpm' }],
+				series: [{ channel: 'rpm', label: t('driver.rpm'), colorVar: '--chart-rpm' }],
 			},
 		],
 		[t],
@@ -93,7 +104,7 @@ const DriverTelemetry: FC = () => {
 				className={classes.traces}
 				actions={windowActions}
 			>
-				<CanvasTrace
+				<TraceChart
 					lanes={lanes}
 					windowSeconds={windowSeconds}
 					ariaLabel={t('driver.traces')}
