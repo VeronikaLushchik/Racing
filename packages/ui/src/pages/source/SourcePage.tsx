@@ -82,15 +82,22 @@ const SourcePage: FC = () => {
 		<PageContent>
 			<div className={classes.intro}>
 				<div>
-					<h1>{t('source.title')}</h1>
-					<p>{t('source.intro')}</p>
+					<h1 className={classes.intro_title}>{t('source.title')}</h1>
+					<p className={classes.intro_text}>{t('source.intro')}</p>
 					{relayState === 'error' && relayMessage && (
-						<p className={classes.error}>{relayMessage}</p>
+						<p className={classes.error_text}>{relayMessage}</p>
 					)}
 				</div>
-				{relayState !== 'idle' && <Button onClick={handleStop}>{t('common.stop')}</Button>}
+				{relayState !== 'idle' && (
+					<Button
+						variant="secondary"
+						onClick={handleStop}
+					>
+						{t('common.stop')}
+					</Button>
+				)}
 			</div>
-			<div className={classes.grid}>
+			<div className={classes.cards_grid}>
 				<SourceCard
 					title={t('source.gt7Title')}
 					description={t('source.gt7Description')}
@@ -191,7 +198,9 @@ const SourcePage: FC = () => {
 						</select>
 					</Field>
 					{rateSelect(f1Rate, setF1Rate)}
-					{isF1SessionsError && <p className={classes.error}>{t('source.f1Offline')}</p>}
+					{isF1SessionsError && (
+						<p className={classes.error_text}>{t('source.f1Offline')}</p>
+					)}
 				</SourceCard>
 
 				<SourceCard
@@ -212,7 +221,7 @@ const SourcePage: FC = () => {
 					onStart={() => start('replay', { file: recording, rate: replayRate })}
 				>
 					{recordings.length === 0 ? (
-						<p className={classes.description}>{t('source.noRecordings')}</p>
+						<p className={classes.intro_text}>{t('source.noRecordings')}</p>
 					) : (
 						<Field label={t('source.recording')}>
 							<select

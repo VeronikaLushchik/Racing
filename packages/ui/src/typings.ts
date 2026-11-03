@@ -1,6 +1,6 @@
 /** @format */
 
-import { ComponentType } from 'react';
+import React, { ComponentType } from 'react';
 
 import { TTranslationKey } from '~@engines/translations/translationsTypings';
 
@@ -20,3 +20,8 @@ export interface TPage {
 }
 
 export type TPagesConfig = Record<string, TPage>;
+
+export interface TOption<Value extends string = string> {
+	value: Value;
+	label: React.ReactNode;
+}

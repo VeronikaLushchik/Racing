@@ -11,4 +11,6 @@ export interface TTelemetryContext {
 	send: (message: TClientMessage) => void;
 }
 
-export const TelemetryContext = createContext<TTelemetryContext | null>(null);
+const telemetryContext = createContext<TTelemetryContext | null>(null);
+
+export default telemetryContext;

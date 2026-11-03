@@ -4,9 +4,9 @@ import React, { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { TClientMessage } from '@racing/shared';
 
-import { TelemetrySocket } from 'src/modules/websockets/telemetrySocket';
+import { TelemetrySocket } from '../websockets';
 
-import { TelemetryContext } from './telemetryContext';
+import telemetryContext from './telemetryContext';
 
 import { WS_URL } from 'src/constants/serverAddress';
 
@@ -32,7 +32,7 @@ const TelemetryProvider: FC<TelemetryProviderProps> = props => {
 		return () => socket.close();
 	}, [socket]);
 
-	return <TelemetryContext.Provider value={value}>{children}</TelemetryContext.Provider>;
+	return <telemetryContext.Provider value={value}>{children}</telemetryContext.Provider>;
 };
 
 export default TelemetryProvider;

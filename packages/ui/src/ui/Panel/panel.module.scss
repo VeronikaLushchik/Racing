@@ -1,46 +1,47 @@
 /** @format */
 
-@import 'src/ui/common/variables';
+@import 'src/ui/common/colors';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
 
-.root {
+.panel {
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
-	border: 1px solid var(--color-border);
-	border-radius: $radius;
-	background: var(--color-surface);
+
+	@extend %card;
 }
 
-.header {
+.panel_header {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
-	gap: $space-3;
-	padding: $space-3 $space-4 0;
+	gap: 12px;
+
+	padding: 12px 16px 0;
 }
 
-.title {
+.panel_title {
 	margin: 0;
-	font-size: 13px;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-	text-transform: uppercase;
-	color: var(--color-text-secondary);
+
+	color: $text_secondary;
+	@extend %font-title-sm;
 }
 
-.subtitle {
-	margin: $space-1 0 0;
-	font-size: 12px;
-	color: var(--color-text-secondary);
+.panel_subtitle {
+	margin: 4px 0 0;
+
+	color: $text_secondary;
+	@extend %font-body-sm;
 }
 
-.actions {
+.panel_actions {
 	display: flex;
-	gap: $space-1;
+	gap: 4px;
 }
 
-.body {
+.panel_body {
 	flex: 1;
 	min-height: 0;
-	padding: $space-3 $space-4 $space-4;
+	padding: 12px 16px 16px;
 }

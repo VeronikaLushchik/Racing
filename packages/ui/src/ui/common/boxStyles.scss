@@ -1,0 +1,86 @@
+/** @format */
+
+@import 'src/ui/common/colors';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/shadows';
+
+// Common. Scrollbar
+
+%scrollbar-md,
+%scrollbar-sm {
+	&::-webkit-scrollbar-thumb {
+		background-color: $neutral_neutral400;
+		border-radius: 16px;
+	}
+
+	&::-webkit-scrollbar {
+		background-color: transparent;
+	}
+
+	&::-webkit-scrollbar-track,
+	&::-webkit-scrollbar-corner {
+		background: transparent;
+	}
+}
+
+%scrollbar-md {
+	&::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+}
+
+%scrollbar-sm {
+	&::-webkit-scrollbar {
+		width: 4px;
+		height: 4px;
+	}
+}
+
+// Common. Card
+
+%card {
+	background-color: $surface_primary;
+	border: 1px solid $stroke_primary;
+	border-radius: 8px;
+}
+
+%native-input {
+	min-width: 0;
+	padding: 8px 12px;
+
+	background-color: $input_bg;
+	border: 1px solid $stroke_primary;
+	border-radius: 4px;
+	outline: none;
+
+	color: $text_primary;
+	@extend %font-body-md;
+
+	&:focus-visible {
+		border-color: $stroke_active;
+	}
+
+	&:disabled {
+		color: $text_disabled;
+	}
+}
+
+@mixin square-size($size) {
+	height: $size;
+	min-height: $size;
+	width: $size;
+	min-width: $size;
+}
+
+@mixin flex-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+@mixin flex-list {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}

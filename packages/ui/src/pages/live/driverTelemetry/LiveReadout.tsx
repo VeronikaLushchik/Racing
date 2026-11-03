@@ -26,32 +26,32 @@ const LiveReadout: FC = () => {
 
 	return (
 		<div className={classes.readout}>
-			<div className={classes.gear}>
-				<span className={classes.readoutLabel}>{t('driver.gear')}</span>
-				<span className={classes.gearValue}>{gearLabel}</span>
+			<div className={classes.gear_box}>
+				<span className={classes.readout_label}>{t('driver.gear')}</span>
+				<span className={classes.gear_value}>{gearLabel}</span>
 			</div>
-			<div className={classes.readoutGrid}>
+			<div className={classes.readout_grid}>
 				<div>
-					<span className={classes.readoutLabel}>{t('driver.speed')}</span>
-					<span className={classes.readoutValue}>
+					<span className={classes.readout_label}>{t('driver.speed')}</span>
+					<span className={classes.readout_value}>
 						{frame ? Math.round(frame.speed) : '—'}
 					</span>
-					<span className={classes.readoutUnit}>km/h</span>
+					<span className={classes.readout_unit}>km/h</span>
 				</div>
 				<div>
-					<span className={classes.readoutLabel}>{t('driver.rpm')}</span>
-					<span className={classes.readoutValue}>{frame ? frame.rpm : '—'}</span>
+					<span className={classes.readout_label}>{t('driver.rpm')}</span>
+					<span className={classes.readout_value}>{frame ? frame.rpm : '—'}</span>
 				</div>
 				<div>
-					<span className={classes.readoutLabel}>
+					<span className={classes.readout_label}>
 						{t('common.lap')} {frame?.lap ?? ''}
 					</span>
-					<span className={classes.readoutValue}>{formatLapTime(frame?.lapTimeMs)}</span>
+					<span className={classes.readout_value}>{formatLapTime(frame?.lapTimeMs)}</span>
 				</div>
 				<div>
-					<span className={classes.readoutLabel}>{t('timing.delta')}</span>
+					<span className={classes.readout_label}>{t('timing.delta')}</span>
 					<span
-						className={classes.readoutValue}
+						className={classes.readout_value}
 						data-delta={deltaState}
 					>
 						{formatDelta(delta)}

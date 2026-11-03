@@ -29,27 +29,37 @@ const Timing: FC = () => {
 	const hasOpponents = session?.capabilities.hasOpponents ?? false;
 
 	return (
-		<div className={classes.root}>
+		<div className={classes.timing}>
 			<div className={classes.summary}>
 				<div className={classes.stat}>
-					<span>{t('timing.currentLap')}</span>
-					<strong>{formatLapTime(frame?.lapTimeMs)}</strong>
+					<span className={classes.stat_label}>{t('timing.currentLap')}</span>
+					<strong className={classes.stat_value}>
+						{formatLapTime(frame?.lapTimeMs)}
+					</strong>
 				</div>
 				<div className={classes.stat}>
-					<span>{t('timing.delta')}</span>
+					<span className={classes.stat_label}>{t('timing.delta')}</span>
 					<strong
+						className={classes.stat_value}
 						data-delta={delta === null ? undefined : delta <= 0 ? 'faster' : 'slower'}
 					>
 						{formatDelta(delta)}
 					</strong>
 				</div>
 				<div className={classes.stat}>
-					<span>{t('timing.lastLap')}</span>
-					<strong>{formatLapTime(lastLap?.lapTimeMs)}</strong>
+					<span className={classes.stat_label}>{t('timing.lastLap')}</span>
+					<strong className={classes.stat_value}>
+						{formatLapTime(lastLap?.lapTimeMs)}
+					</strong>
 				</div>
 				<div className={classes.stat}>
-					<span>{t('timing.bestLap')}</span>
-					<strong data-split="purple">{formatLapTime(bestLapMs)}</strong>
+					<span className={classes.stat_label}>{t('timing.bestLap')}</span>
+					<strong
+						className={classes.stat_value}
+						data-split="purple"
+					>
+						{formatLapTime(bestLapMs)}
+					</strong>
 				</div>
 			</div>
 
@@ -58,9 +68,9 @@ const Timing: FC = () => {
 				subtitle={t('timing.sectorLegend')}
 			>
 				{classified.length === 0 ? (
-					<p className={classes.empty}>{t('timing.noLaps')}</p>
+					<p className={classes.empty_text}>{t('timing.noLaps')}</p>
 				) : (
-					<div className={classes.tableWrap}>
+					<div className={classes.table_wrap}>
 						<table className={classes.table}>
 							<thead>
 								<tr>
@@ -89,7 +99,7 @@ const Timing: FC = () => {
 											</td>
 										))}
 										<td>{lap.compound ?? '—'}</td>
-										<td className={classes.flags}>
+										<td className={classes.lap_flags}>
 											{lap.isPitLap
 												? t('timing.pit')
 												: !lap.isValid
@@ -106,9 +116,9 @@ const Timing: FC = () => {
 
 			<Panel title={t('timing.field')}>
 				{!hasOpponents || field.length === 0 ? (
-					<p className={classes.empty}>{t('timing.noField')}</p>
+					<p className={classes.empty_text}>{t('timing.noField')}</p>
 				) : (
-					<div className={classes.tableWrap}>
+					<div className={classes.table_wrap}>
 						<table className={classes.table}>
 							<thead>
 								<tr>
@@ -124,7 +134,7 @@ const Timing: FC = () => {
 								{field.map(entry => (
 									<tr
 										key={entry.id}
-										data-player={entry.isPlayer || undefined}
+										data-is-player={entry.isPlayer}
 									>
 										<td>{entry.position}</td>
 										<td>{entry.name}</td>

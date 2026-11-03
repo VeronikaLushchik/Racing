@@ -1,111 +1,109 @@
 /** @format */
 
+@import 'src/ui/common/colors';
 @import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
 
-.root {
+.timing {
 	display: grid;
 	grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-	gap: $space-4;
+	gap: 16px;
 
-	@media (max-width: 960px) {
+	@media all and (max-width: $tabletBreakpoint) {
 		grid-template-columns: minmax(0, 1fr);
 	}
 }
 
 .summary {
 	grid-column: 1 / -1;
+
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: $space-3;
+	gap: 12px;
 
-	@media (max-width: 640px) {
+	@media all and (max-width: $mobileBreakpoint) {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
 .stat {
-	display: flex;
-	flex-direction: column;
-	gap: $space-1;
-	padding: $space-3 $space-4;
-	border: 1px solid var(--color-border);
-	border-radius: $radius;
-	background: var(--color-surface);
+	@include flex-list;
+	gap: 4px;
 
-	span {
-		font-size: 12px;
-		color: var(--color-text-secondary);
-	}
+	padding: 12px 16px;
 
-	strong {
-		font-family: $font-mono;
-		font-size: 26px;
-		font-variant-numeric: tabular-nums;
-	}
+	@extend %card;
+}
+
+.stat_label {
+	color: $text_secondary;
+	@extend %font-body-sm;
+}
+
+.stat_value {
+	@extend %font-numeric-lg;
 }
 
 [data-delta='faster'] {
-	color: var(--color-status-ok);
+	color: $system_success;
 }
 
 [data-delta='slower'] {
-	color: var(--color-status-error);
+	color: $system_dangerous;
 }
 
-[data-split='purple'] {
-	color: var(--color-sector-purple);
+@each $split in ('purple', 'green', 'yellow') {
+	[data-split='#{$split}'] {
+		color: colorBySplit($split);
+	}
 }
 
-[data-split='green'] {
-	color: var(--color-sector-green);
-}
-
-[data-split='yellow'] {
-	color: var(--color-sector-yellow);
-}
-
-.tableWrap {
-	overflow-x: auto;
+.table_wrap {
 	max-height: 520px;
+	overflow: auto;
+
+	@extend %scrollbar-sm;
 }
 
 .table {
 	width: 100%;
 	border-collapse: collapse;
-	font-family: $font-mono;
-	font-size: 13px;
-	font-variant-numeric: tabular-nums;
+
+	@extend %font-numeric-sm;
 
 	th {
 		position: sticky;
 		top: 0;
-		background: var(--color-surface);
+
+		background-color: $surface_primary;
+
+		color: $text_secondary;
 		text-align: start;
-		font-family: $font-sans;
-		font-weight: 500;
-		font-size: 12px;
-		color: var(--color-text-secondary);
+		@extend %font-label-md;
 	}
 
 	th,
 	td {
-		padding: $space-1 $space-2;
-		border-bottom: 1px solid var(--color-grid);
+		padding: 4px 8px;
+
+		border-bottom: 1px solid $chart_grid;
+
 		white-space: nowrap;
 	}
 
-	tr[data-player] td {
-		background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+	tr[data-is-player='true'] td {
+		background-color: color-mix(in srgb, #{$stroke_active} 18%, transparent);
 	}
 }
 
-.flags {
-	font-family: $font-sans;
-	font-size: 12px;
-	color: var(--color-text-secondary);
+.lap_flags {
+	color: $text_secondary;
+	@extend %font-body-sm;
 }
 
-.empty {
+.empty_text {
 	margin: 0;
-	color: var(--color-text-secondary);
+
+	color: $text_secondary;
 }

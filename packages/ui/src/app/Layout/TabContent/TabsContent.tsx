@@ -5,32 +5,32 @@ import { NavLink } from 'react-router-dom';
 
 import useTranslation from '~@engines/translations/useTranslation';
 
-import { appUrl } from 'src/constants/apiConstants';
+import { appUrl } from '../../../constants/apiConstants';
 
-import { TPage } from 'src/typings';
+import { TPage } from '../../../typings';
 
-import classes from './layout.module.scss';
+import classes from './tabsContent.module.scss';
 
-interface TabsNavProps {
+interface TabsContentProps {
 	page: TPage;
 }
 
-const TabsNav: FC<TabsNavProps> = props => {
+const TabsContent: FC<TabsContentProps> = props => {
 	const { page } = props;
 
 	const t = useTranslation();
 
 	return (
 		<nav
-			className={classes.tabs}
+			className={classes.tabs_content}
 			aria-label={t(page.tKey)}
 		>
 			{Object.entries(page.tabs ?? {}).map(([key, tab]) => (
 				<NavLink
 					key={key}
 					to={appUrl(`${page.path}${tab.path}`)}
-					className={classes.tab}
-					activeClassName={classes.tabActive}
+					className={classes.tab_link}
+					activeClassName={classes.tab_link_active}
 				>
 					{t(tab.tKey)}
 				</NavLink>
@@ -39,4 +39,4 @@ const TabsNav: FC<TabsNavProps> = props => {
 	);
 };
 
-export default TabsNav;
+export default TabsContent;

@@ -1,5 +1,7 @@
 /** @format */
 
+export const emptyFunction = (): void => undefined;
+
 export const compositeClassNames = (...names: (string | false | null | undefined)[]): string =>
 	names.filter(Boolean).join(' ');
 

@@ -39,10 +39,10 @@ const drawTraces = (lanes: TTraceLane[], windowSeconds: number) => (args: TCanva
 		const y = (value: number): number =>
 			top + laneHeight - ((value - lane.min) / (lane.max - lane.min)) * laneHeight;
 
-		ctx.strokeStyle = color('--color-grid');
+		ctx.strokeStyle = color('--chart-grid');
 		ctx.lineWidth = 1;
 		ctx.strokeRect(LABEL_WIDTH + 0.5, top + 0.5, plotWidth - 1, laneHeight - 1);
-		ctx.fillStyle = color('--color-text-secondary');
+		ctx.fillStyle = color('--text-secondary');
 		ctx.fillText(lane.label, 4, top + 10);
 
 		lane.series.forEach((series, seriesIndex) => {
@@ -84,7 +84,7 @@ const CanvasTrace: FC<CanvasTraceProps> = props => {
 	return (
 		<canvas
 			ref={canvasRef}
-			className={classes.canvas}
+			className={classes.canvas_trace}
 			role="img"
 			aria-label={ariaLabel}
 		/>

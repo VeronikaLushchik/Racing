@@ -1,31 +1,77 @@
 /** @format */
 
-// Design tokens. Components never hard-code colours; canvases read these as CSS variables.
-:root {
-	--color-bg: #0e1116;
-	--color-surface: #161b22;
-	--color-surface-raised: #1f2630;
-	--color-border: #2c3440;
-	--color-text: #e6edf3;
-	--color-text-secondary: #8b98a5;
-	--color-accent: #3d8bfd;
+// Palette
 
-	--color-speed: #3d8bfd;
-	--color-throttle: #2fbf71;
-	--color-brake: #ef4b4b;
-	--color-gear: #c7a4ff;
-	--color-rpm: #f2a93b;
-	--color-grid: #26303b;
+$base_white: #ffffff;
+$base_black: #0b0e13;
 
-	--color-sector-purple: #a55cff;
-	--color-sector-green: #2fbf71;
-	--color-sector-yellow: #e6c229;
+$neutral_neutral900: #0e1116;
+$neutral_neutral800: #161b22;
+$neutral_neutral700: #1f2630;
+$neutral_neutral600: #26303b;
+$neutral_neutral500: #2c3440;
+$neutral_neutral400: #5b6673;
+$neutral_neutral300: #8b98a5;
+$neutral_neutral100: #e6edf3;
 
-	--color-temp-cold: #3d8bfd;
-	--color-temp-optimal: #2fbf71;
-	--color-temp-hot: #ef4b4b;
+$system_rose500: #ef4b4b;
+$system_amber400: #e6c229;
+$system_green500: #2fbf71;
 
-	--color-status-ok: #2fbf71;
-	--color-status-warn: #e6c229;
-	--color-status-error: #ef4b4b;
-}
+$secondary_blue500: #3d8bfd;
+$secondary_blue400: #5d9efd;
+$secondary_violet500: #a55cff;
+$secondary_violet300: #c7a4ff;
+$secondary_orange400: #f2a93b;
+
+// Tokens. Values come from the active theme (ui/common/themes.ts) as CSS variables,
+// so canvases can read the same colours with getComputedStyle.
+
+// Surface
+$surface_primary: var(--surface-primary);
+$surface_secondary: var(--surface-secondary);
+$surface_raised: var(--surface-raised);
+
+// Stroke
+$stroke_primary: var(--stroke-primary);
+$stroke_active: var(--stroke-active);
+
+// Text
+$text_primary: var(--text-primary);
+$text_secondary: var(--text-secondary);
+$text_disabled: var(--text-disabled);
+$text_active: var(--text-active);
+
+// Button
+$button_primary: var(--button-primary);
+$button_stroke: var(--button-stroke);
+$button_system: var(--button-system);
+$button_hovered: var(--button-hovered);
+$button_disabled: var(--button-disabled);
+$button_label_primary: var(--button-label-primary);
+
+// Input
+$input_bg: var(--input-bg);
+
+// System
+$system_dangerous: var(--system-dangerous);
+$system_warning: var(--system-warning);
+$system_success: var(--system-success);
+
+// Chart
+$chart_grid: var(--chart-grid);
+$chart_speed: var(--chart-speed);
+$chart_throttle: var(--chart-throttle);
+$chart_brake: var(--chart-brake);
+$chart_gear: var(--chart-gear);
+$chart_rpm: var(--chart-rpm);
+
+// Sectors
+$sector_purple: var(--sector-purple);
+$sector_green: var(--sector-green);
+$sector_yellow: var(--sector-yellow);
+
+// Temperature
+$temperature_cold: var(--temperature-cold);
+$temperature_optimal: var(--temperature-optimal);
+$temperature_hot: var(--temperature-hot);

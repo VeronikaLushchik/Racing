@@ -20,7 +20,7 @@ const CarHealth: FC = () => {
 	const capabilities = session?.capabilities;
 
 	return (
-		<div className={classes.root}>
+		<div className={classes.car_health}>
 			<Panel
 				title={t('car.tyres')}
 				subtitle={
@@ -30,9 +30,9 @@ const CarHealth: FC = () => {
 				}
 			>
 				{!capabilities?.hasTyreTemps ? (
-					<p className={classes.empty}>{t('common.notAvailable')}</p>
+					<p className={classes.empty_text}>{t('common.notAvailable')}</p>
 				) : (
-					<div className={classes.car}>
+					<div className={classes.car_layout}>
 						{WHEELS.map((wheel, index) => {
 							const zones = frame?.tyreZones?.[index];
 							const average = frame?.tyreTemps?.[index] ?? null;
@@ -50,12 +50,12 @@ const CarHealth: FC = () => {
 									key={wheel}
 									className={classes.tyre}
 								>
-									<span className={classes.wheelLabel}>{t(`car.${wheel}`)}</span>
+									<span className={classes.wheel_label}>{t(`car.${wheel}`)}</span>
 									<div className={classes.tread}>
 										{ordered.map(cell => (
 											<div
 												key={cell.key}
-												className={classes.zone}
+												className={classes.tread_zone}
 												data-temp-state={
 													average === null
 														? undefined
@@ -71,7 +71,7 @@ const CarHealth: FC = () => {
 										))}
 									</div>
 									{frame?.tyreWear && (
-										<span className={classes.wear}>
+										<span className={classes.tyre_wear}>
 											{t('car.wear')}{' '}
 											{Math.round(frame.tyreWear[index] * 100)}%
 										</span>
@@ -91,7 +91,7 @@ const CarHealth: FC = () => {
 			</Panel>
 			<Panel title={t('car.brakes')}>
 				{!capabilities?.hasBrakeTemps ? (
-					<p className={classes.empty}>{t('common.notAvailable')}</p>
+					<p className={classes.empty_text}>{t('common.notAvailable')}</p>
 				) : (
 					<div className={classes.brakes}>
 						{WHEELS.map((wheel, index) => {
@@ -106,8 +106,8 @@ const CarHealth: FC = () => {
 											: temperatureState(Math.round(value), BRAKE_WINDOW_C)
 									}
 								>
-									<span className={classes.wheelLabel}>{t(`car.${wheel}`)}</span>
-									<span className={classes.brakeValue}>
+									<span className={classes.wheel_label}>{t(`car.${wheel}`)}</span>
+									<span className={classes.big_value}>
 										{value === null ? '—' : Math.round(value)} °C
 									</span>
 								</div>
@@ -118,9 +118,9 @@ const CarHealth: FC = () => {
 			</Panel>
 			<Panel title={t('car.fuel')}>
 				{!capabilities?.hasFuel ? (
-					<p className={classes.empty}>{t('common.notAvailable')}</p>
+					<p className={classes.empty_text}>{t('common.notAvailable')}</p>
 				) : (
-					<span className={classes.brakeValue}>
+					<span className={classes.big_value}>
 						{frame?.fuel != null ? frame.fuel.toFixed(1) : '—'} L
 					</span>
 				)}

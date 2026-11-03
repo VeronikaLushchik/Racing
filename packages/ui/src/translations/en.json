@@ -59,7 +59,8 @@
 		"ggHint": "Lateral vs longitudinal G, last 6 s",
 		"derivedG": "G derived from speed and yaw, not measured",
 		"traces": "Speed, pedals, gear, RPM",
-		"readout": "Now"
+		"readout": "Now",
+		"traceWindow": "Trace window"
 	},
 	"car": {
 		"tyres": "Tyre temperatures",

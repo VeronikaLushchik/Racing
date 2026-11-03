@@ -10,3 +10,4 @@ type TLeafKeys<T> = {
 
 export type TTranslationKey = TLeafKeys<typeof en>;
 export type TLanguage = 'en' | 'uk';
+export type TTranslationFunction = (tKey: TTranslationKey) => string;

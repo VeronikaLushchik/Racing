@@ -4,7 +4,7 @@ import { TTraceChannel } from 'src/modules/telemetry/ringBuffer';
 
 export interface TTraceSeries {
 	channel: TTraceChannel;
-	/** CSS variable holding the colour, e.g. --color-speed. */
+	/** CSS variable holding the colour, e.g. --chart-speed. */
 	colorVar: string;
 	isStep?: boolean;
 }

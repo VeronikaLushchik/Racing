@@ -1,29 +1,25 @@
 /** @format */
 
-@import 'src/ui/common/variables';
+@import 'src/ui/common/colors';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
 
-.root {
-	display: flex;
-	flex-direction: column;
-	gap: $space-1;
+.field {
+	@include flex-list;
+	gap: 4px;
 
 	input,
 	select {
-		padding: $space-2 $space-3;
-		border: 1px solid var(--color-border);
-		border-radius: $radius;
-		background: var(--color-bg);
-		color: var(--color-text);
-		min-width: 0;
+		@extend %native-input;
 	}
 }
 
-.label {
-	font-size: 12px;
-	color: var(--color-text-secondary);
+.field_label {
+	color: $text_secondary;
+	@extend %font-label-md;
 }
 
-.hint {
-	font-size: 11px;
-	color: var(--color-text-secondary);
+.field_hint {
+	color: $text_secondary;
+	@extend %font-label-sm;
 }

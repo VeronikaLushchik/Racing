@@ -1,15 +1,28 @@
 /** @format */
 
-$space-1: 4px;
-$space-2: 8px;
-$space-3: 12px;
-$space-4: 16px;
-$space-6: 24px;
-$radius: 8px;
-$font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-$font-sans:
-	Inter,
-	system-ui,
-	-apple-system,
-	'Segoe UI',
-	sans-serif;
+@import './colors';
+
+$topZIndex: 1300;
+$headerHeight: var(--header-height, 56px);
+$pageMaxWidth: 1600px;
+
+$mobileBreakpoint: 640px;
+$tabletBreakpoint: 960px;
+
+@function colorBySplit($split) {
+	@if $split == 'purple' {
+		@return $sector_purple;
+	} @else if $split == 'green' {
+		@return $sector_green;
+	}
+	@return $sector_yellow;
+}
+
+@function colorByTemperature($state) {
+	@if $state == 'cold' {
+		@return $temperature_cold;
+	} @else if $state == 'hot' {
+		@return $temperature_hot;
+	}
+	@return $temperature_optimal;
+}

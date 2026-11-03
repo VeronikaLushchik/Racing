@@ -34,8 +34,8 @@ const draw = (args: TCanvasDrawArgs): void => {
 	const cy = height / 2;
 	const scale = (size / 2 - 14) / limit;
 
-	ctx.strokeStyle = color('--color-grid');
-	ctx.fillStyle = color('--color-text-secondary');
+	ctx.strokeStyle = color('--chart-grid');
+	ctx.fillStyle = color('--text-secondary');
 	ctx.font = '10px system-ui, sans-serif';
 	ctx.lineWidth = 1;
 	for (let g = 1; g <= limit; g += 1) {
@@ -51,7 +51,7 @@ const draw = (args: TCanvasDrawArgs): void => {
 	ctx.lineTo(cx, cy + limit * scale);
 	ctx.stroke();
 
-	const accent = color('--color-accent');
+	const accent = color('--stroke-active');
 	ctx.fillStyle = accent;
 	for (let i = first; i < buffer.count; i += 1) {
 		ctx.globalAlpha = trailAlpha(tEnd - buffer.get('t', i), GG_TRAIL_MS) * 0.6;
@@ -67,7 +67,7 @@ const draw = (args: TCanvasDrawArgs): void => {
 	if (lat !== null && long !== null) {
 		ctx.beginPath();
 		ctx.arc(cx + lat * scale, cy + long * scale, 5, 0, Math.PI * 2);
-		ctx.fillStyle = color('--color-text');
+		ctx.fillStyle = color('--text-primary');
 		ctx.fill();
 	}
 };
@@ -82,7 +82,7 @@ const GGDiagram: FC<GGDiagramProps> = props => {
 	return (
 		<canvas
 			ref={canvasRef}
-			className={classes.ggCanvas}
+			className={classes.gg_canvas}
 			role="img"
 			aria-label={ariaLabel}
 		/>

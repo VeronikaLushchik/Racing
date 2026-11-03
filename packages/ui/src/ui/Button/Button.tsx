@@ -1,40 +1,57 @@
 /** @format */
 
-import React, { ButtonHTMLAttributes, forwardRef } from 'react';
+import React, { FC } from 'react';
 
-import { compositeClassNames } from 'src/services/functions';
+import { compositeClassNames } from '../../services/functions';
 
 import classes from './button.module.scss';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-	variant?: 'primary' | 'secondary' | 'ghost';
-	size?: 'sm' | 'md';
-	isActive?: boolean;
+interface OwnProps {
+	variant?: 'primary' | 'secondary' | 'system' | 'text';
+	size?: 'lg' | 'md' | 'sm' | 'xs';
+	disabled?: boolean;
+	className?: string;
+	innerRef?: React.Ref<HTMLButtonElement>;
+	type?: 'button' | 'submit' | 'reset';
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
+type NativeElementProps = Omit<
+	React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>,
+	keyof OwnProps | 'ref'
+>;
+
+type ButtonProps = OwnProps & NativeElementProps;
+
+const Button: FC<ButtonProps> = props => {
 	const {
-		variant = 'secondary',
+		variant = 'primary',
 		size = 'md',
-		isActive = false,
-		className,
+		children,
+		disabled = false,
+		className: providedClassName,
+		innerRef,
 		type = 'button',
-		...rest
+		...buttonProps
 	} = props;
 
 	return (
 		<button
-			ref={ref}
+			{...buttonProps}
+			ref={innerRef}
 			type={type}
-			className={compositeClassNames(classes.root, className)}
-			data-button-variant={variant}
+			className={compositeClassNames(classes.button, providedClassName)}
 			data-button-size={size}
-			data-active={isActive || undefined}
-			{...rest}
-		/>
+			data-button-type={variant}
+			disabled={disabled}
+		>
+			{children && <span>{children}</span>}
+		</button>
 	);
-});
+};
 
-Button.displayName = 'Button';
-
-export default Button;
+export default React.forwardRef<HTMLButtonElement, Omit<ButtonProps, 'innerRef'>>((props, ref) => (
+	<Button
+		{...props}
+		innerRef={ref}
+	/>
+));

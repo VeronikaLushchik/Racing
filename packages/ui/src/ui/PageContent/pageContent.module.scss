@@ -1,13 +1,20 @@
 /** @format */
 
+@import 'src/ui/common/colors';
 @import 'src/ui/common/variables';
 
-.root {
-	padding: $space-4;
-	max-width: 1600px;
+.page_content {
+	max-width: $pageMaxWidth;
 	margin: 0 auto;
+	padding: 16px 24px 24px;
+	box-sizing: border-box;
 
-	@media (max-width: 640px) {
-		padding: $space-3;
+	&[data-has-gap='true'] {
+		display: flex;
+		flex-direction: column;
+	}
+
+	@media all and (max-width: $mobileBreakpoint) {
+		padding: 12px;
 	}
 }

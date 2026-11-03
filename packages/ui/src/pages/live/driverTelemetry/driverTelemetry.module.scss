@@ -1,13 +1,16 @@
 /** @format */
 
+@import 'src/ui/common/colors';
 @import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
 
-.root {
+.driver_telemetry {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 320px;
-	gap: $space-4;
+	gap: 16px;
 
-	@media (max-width: 960px) {
+	@media all and (max-width: $tabletBreakpoint) {
 		grid-template-columns: minmax(0, 1fr);
 	}
 }
@@ -19,7 +22,7 @@
 		height: 520px;
 	}
 
-	@media (max-width: 640px) {
+	@media all and (max-width: $mobileBreakpoint) {
 		min-height: 420px;
 
 		> div:last-child {
@@ -28,115 +31,113 @@
 	}
 }
 
-.side {
-	display: flex;
-	flex-direction: column;
-	gap: $space-4;
+.side_column {
+	@include flex-list;
+	gap: 16px;
 }
 
 .readout {
 	display: flex;
-	gap: $space-4;
 	align-items: stretch;
+	gap: 16px;
 }
 
-.gear {
-	display: flex;
-	flex-direction: column;
+.gear_box {
+	@include flex-list;
 	align-items: center;
 	justify-content: center;
+
 	min-width: 72px;
-	border: 1px solid var(--color-border);
-	border-radius: $radius;
+
+	border: 1px solid $stroke_primary;
+	border-radius: 8px;
 }
 
-.gearValue {
-	font-family: $font-mono;
-	font-size: 44px;
-	font-weight: 700;
-	color: var(--color-gear);
+.gear_value {
+	@extend %font-numeric-xl;
+	color: $chart_gear;
 }
 
-.readoutGrid {
+.readout_grid {
 	flex: 1;
+
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: $space-2 $space-3;
+	gap: 8px 12px;
 
 	> div {
-		display: flex;
-		flex-direction: column;
+		@include flex-list;
 	}
 }
 
-.readoutLabel {
-	font-size: 11px;
-	color: var(--color-text-secondary);
+.readout_label,
+.readout_unit {
+	color: $text_secondary;
+	@extend %font-label-sm;
 }
 
-.readoutValue {
-	font-family: $font-mono;
-	font-size: 18px;
-	font-variant-numeric: tabular-nums;
+.readout_value {
+	@extend %font-numeric-md;
 
 	&[data-delta='faster'] {
-		color: var(--color-status-ok);
+		color: $system_success;
 	}
 
 	&[data-delta='slower'] {
-		color: var(--color-status-error);
+		color: $system_dangerous;
 	}
-}
-
-.readoutUnit {
-	font-size: 11px;
-	color: var(--color-text-secondary);
 }
 
 .pedals {
 	display: flex;
 	justify-content: center;
-	gap: $space-6;
+	gap: 24px;
 }
 
 .pedal {
-	display: flex;
-	flex-direction: column;
+	@include flex-list;
 	align-items: center;
-	gap: $space-1;
-	font-size: 12px;
-	color: var(--color-text-secondary);
+	gap: 4px;
+
+	color: $text_secondary;
+	@extend %font-body-sm;
 }
 
-.pedalTrack {
+.pedal_track {
 	position: relative;
+
 	width: 36px;
 	height: 120px;
-	border: 1px solid var(--color-border);
+
+	background-color: $surface_secondary;
+	border: 1px solid $stroke_primary;
 	border-radius: 4px;
+
 	overflow: hidden;
-	background: var(--color-bg);
 }
 
-.pedalFill {
+.pedal_fill {
 	position: absolute;
 	inset-inline: 0;
 	bottom: 0;
+
 	height: 0;
 
 	&[data-pedal='throttle'] {
-		background: var(--color-throttle);
+		background-color: $chart_throttle;
 	}
 
 	&[data-pedal='brake'] {
-		background: var(--color-brake);
+		background-color: $chart_brake;
 	}
 }
 
-.ggCanvas {
+.gg_canvas {
 	display: block;
+
 	width: 100%;
 	max-width: 320px;
 	margin: 0 auto;
+
 	aspect-ratio: 1;
 }

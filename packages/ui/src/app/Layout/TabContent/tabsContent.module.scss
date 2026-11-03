@@ -1,0 +1,46 @@
+/** @format */
+
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+.tabs_content {
+	display: flex;
+	gap: 8px;
+
+	max-width: $pageMaxWidth;
+	margin: 0 auto;
+	padding: 16px 24px 0;
+
+	overflow-x: auto;
+	@extend %scrollbar-sm;
+
+	@media all and (max-width: $mobileBreakpoint) {
+		padding: 12px 12px 0;
+	}
+}
+
+.tab_link {
+	padding: 6px 12px;
+
+	border-bottom: 2px solid transparent;
+
+	color: $text_secondary;
+	text-decoration: none;
+	white-space: nowrap;
+	@extend %font-label-lg;
+
+	transition:
+		color 0.2s ease,
+		border-color 0.2s ease;
+
+	&:hover {
+		color: $text_primary;
+	}
+}
+
+.tab_link_active {
+	border-bottom-color: $stroke_active;
+	color: $text_primary;
+}
