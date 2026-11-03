@@ -1,0 +1,20 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"module": "CommonJS",
+		"moduleResolution": "node",
+		"outDir": ".test-dist",
+		"rootDir": "..",
+		"baseUrl": ".",
+		"lib": ["ES2020"],
+		"types": [],
+		"isolatedModules": false
+	},
+	"files": [
+		"src/modules/telemetry/ringBuffer.ts",
+		"src/engines/racingMath/deltaModel.ts",
+		"src/pages/live/timing/timingFunctions.ts",
+		"src/pages/live/carHealth/carHealthFunctions.ts",
+		"src/pages/live/driverTelemetry/driverTelemetryFunctions.ts"
+	]
+}

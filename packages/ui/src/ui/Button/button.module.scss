@@ -1,0 +1,48 @@
+/** @format */
+
+@import 'src/ui/common/variables';
+
+.root {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: $space-2;
+	padding: $space-2 $space-4;
+	border: 1px solid var(--color-border);
+	border-radius: $radius;
+	background: var(--color-surface-raised);
+	color: var(--color-text);
+	cursor: pointer;
+	transition: border-color 0.15s;
+
+	&:hover:not(:disabled) {
+		border-color: var(--color-accent);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	&[data-button-variant='primary'] {
+		background: var(--color-accent);
+		border-color: var(--color-accent);
+		color: var(--color-bg);
+		font-weight: 600;
+	}
+
+	&[data-button-variant='ghost'] {
+		background: transparent;
+		border-color: transparent;
+	}
+
+	&[data-button-size='sm'] {
+		padding: $space-1 $space-3;
+		font-size: 12px;
+	}
+
+	&[data-active] {
+		border-color: var(--color-accent);
+		color: var(--color-accent);
+	}
+}

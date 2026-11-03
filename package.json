@@ -1,0 +1,25 @@
+{
+	"name": "racing-telemetry",
+	"private": true,
+	"workspaces": [
+		"packages/shared",
+		"packages/relay",
+		"packages/ui"
+	],
+	"scripts": {
+		"build": "npm run build -w @racing/shared && npm run build -w @racing/relay && npm run build -w @racing/ui",
+		"typecheck": "npm run typecheck --workspaces",
+		"test:unit": "npm run test:unit --workspaces --if-present",
+		"format": "prettier --write \"packages/*/src/**/*.{ts,tsx,scss}\"",
+		"precommit-format": "prettier --check \"packages/*/src/**/*.{ts,tsx,scss}\"",
+		"relay": "npm run start -w @racing/relay",
+		"start": "npm run dev -w @racing/ui"
+	},
+	"devDependencies": {
+		"prettier": "^3.3.3",
+		"typescript": "4.9.5"
+	},
+	"engines": {
+		"node": ">=20"
+	}
+}

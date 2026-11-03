@@ -1,0 +1,13 @@
+/** @format */
+
+@import 'src/ui/common/variables';
+
+.root {
+	padding: $space-4;
+	max-width: 1600px;
+	margin: 0 auto;
+
+	@media (max-width: 640px) {
+		padding: $space-3;
+	}
+}

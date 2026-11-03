@@ -1,0 +1,31 @@
+/** @format */
+
+// Design tokens. Components never hard-code colours; canvases read these as CSS variables.
+:root {
+	--color-bg: #0e1116;
+	--color-surface: #161b22;
+	--color-surface-raised: #1f2630;
+	--color-border: #2c3440;
+	--color-text: #e6edf3;
+	--color-text-secondary: #8b98a5;
+	--color-accent: #3d8bfd;
+
+	--color-speed: #3d8bfd;
+	--color-throttle: #2fbf71;
+	--color-brake: #ef4b4b;
+	--color-gear: #c7a4ff;
+	--color-rpm: #f2a93b;
+	--color-grid: #26303b;
+
+	--color-sector-purple: #a55cff;
+	--color-sector-green: #2fbf71;
+	--color-sector-yellow: #e6c229;
+
+	--color-temp-cold: #3d8bfd;
+	--color-temp-optimal: #2fbf71;
+	--color-temp-hot: #ef4b4b;
+
+	--color-status-ok: #2fbf71;
+	--color-status-warn: #e6c229;
+	--color-status-error: #ef4b4b;
+}
