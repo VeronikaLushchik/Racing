@@ -1,0 +1,55 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+
+.status_pill {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	min-width: 0;
+	margin-inline-start: auto;
+
+	@extend %font-body-sm;
+
+	&[data-relay-state='streaming'] {
+		--status-color: #{$system_success};
+	}
+
+	&[data-relay-state='connecting'] {
+		--status-color: #{$system_warning};
+	}
+
+	&[data-relay-state='error'],
+	&[data-relay-state='disconnected'] {
+		--status-color: #{$system_dangerous};
+	}
+
+	@media all and (max-width: $mobileBreakpoint) {
+		order: 5;
+		width: 100%;
+		margin-inline-start: 0;
+	}
+}
+
+.status_dot {
+	flex: none;
+	width: 8px;
+	height: 8px;
+
+	border-radius: 50%;
+	background-color: var(--status-color, #{$text_secondary});
+}
+
+.status_label {
+	@extend %font-label-md;
+	white-space: nowrap;
+}
+
+.status_detail {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	color: $text_secondary;
+}

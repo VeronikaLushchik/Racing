@@ -1,5 +1,3 @@
-/** @format */
-
 import { API_URL } from './serverAddress';
 
 export const appUrl = (path: string): string => path;

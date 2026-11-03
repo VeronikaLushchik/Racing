@@ -1,5 +1,3 @@
-/** @format */
-
 import { RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 export const useStableCallback = <A extends unknown[], R>(callback: (...args: A) => R) => {

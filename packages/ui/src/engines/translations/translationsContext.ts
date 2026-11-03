@@ -1,17 +1,18 @@
-/** @format */
-
 import { createContext } from 'react';
 
-import { TLanguage, TTranslationKey } from './translationsTypings';
+import { emptyFunction } from '../../services/functions';
+import { buildTranslationFunction } from './translationsFunctions';
+
+import { TLanguage, TTranslationFunction } from './translationsTypings';
 
 export interface TTranslationsContext {
 	language: TLanguage;
 	setLanguage: (language: TLanguage) => void;
-	t: (key: TTranslationKey) => string;
+	t: TTranslationFunction;
 }
 
-export const TranslationsContext = createContext<TTranslationsContext>({
+export default createContext<TTranslationsContext>({
 	language: 'en',
-	setLanguage: () => undefined,
-	t: key => key,
+	setLanguage: emptyFunction,
+	t: buildTranslationFunction({}, {}),
 });

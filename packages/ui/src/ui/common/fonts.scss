@@ -1,0 +1,114 @@
+$fontFamily:
+	'Inter',
+	system-ui,
+	-apple-system,
+	'Segoe UI',
+	sans-serif;
+$monoFontFamily: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+// Headline
+%font-headline-sm {
+	font-family: $fontFamily;
+	font-size: 22px;
+	font-style: normal;
+	font-weight: 600;
+	line-height: 28px;
+}
+
+// Title
+%font-title-md {
+	font-family: $fontFamily;
+	font-size: 16px;
+	font-style: normal;
+	font-weight: 600;
+	line-height: 24px;
+	letter-spacing: 0.15px;
+}
+
+%font-title-sm {
+	font-family: $fontFamily;
+	font-size: 13px;
+	font-style: normal;
+	font-weight: 600;
+	line-height: 20px;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+}
+
+// Label
+%font-label-lg {
+	font-family: $fontFamily;
+	font-size: 14px;
+	font-style: normal;
+	font-weight: 600;
+	line-height: 20px;
+	letter-spacing: 0.1px;
+}
+
+%font-label-md {
+	font-family: $fontFamily;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: 600;
+	line-height: 16px;
+	letter-spacing: 0.5px;
+}
+
+%font-label-sm {
+	font-family: $fontFamily;
+	font-size: 11px;
+	font-style: normal;
+	font-weight: 500;
+	line-height: 16px;
+	letter-spacing: 0.3px;
+}
+
+// Body
+%font-body-md {
+	font-family: $fontFamily;
+	font-size: 14px;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 20px;
+}
+
+%font-body-sm {
+	font-family: $fontFamily;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 16px;
+}
+
+// Numeric (telemetry readouts)
+%font-numeric-xl {
+	font-family: $monoFontFamily;
+	font-size: 44px;
+	font-weight: 700;
+	line-height: 52px;
+	font-variant-numeric: tabular-nums;
+}
+
+%font-numeric-lg {
+	font-family: $monoFontFamily;
+	font-size: 26px;
+	font-weight: 500;
+	line-height: 32px;
+	font-variant-numeric: tabular-nums;
+}
+
+%font-numeric-md {
+	font-family: $monoFontFamily;
+	font-size: 18px;
+	font-weight: 500;
+	line-height: 24px;
+	font-variant-numeric: tabular-nums;
+}
+
+%font-numeric-sm {
+	font-family: $monoFontFamily;
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 20px;
+	font-variant-numeric: tabular-nums;
+}

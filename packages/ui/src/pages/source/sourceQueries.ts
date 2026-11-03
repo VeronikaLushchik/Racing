@@ -1,5 +1,3 @@
-/** @format */
-
 import { useQuery } from 'react-query';
 
 import { apiFetch } from 'src/services/apiFetch';

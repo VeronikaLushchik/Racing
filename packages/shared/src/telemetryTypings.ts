@@ -1,5 +1,3 @@
-/** @format */
-
 /** Wheel order used everywhere: front-left, front-right, rear-left, rear-right. */
 export type TWheelTuple<T> = [T, T, T, T];
 

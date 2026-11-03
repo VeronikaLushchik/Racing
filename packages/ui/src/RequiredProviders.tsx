@@ -1,9 +1,8 @@
-/** @format */
-
 import React, { FC, ReactNode } from 'react';
 import { QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
 
+import RootThemeProvider from './ui/RootThemeProvider/RootThemeProvider';
 import TranslationsProvider from '~@engines/translations/TranslationsProvider';
 
 import { queryClient } from './queryClient';
@@ -13,13 +12,15 @@ interface RequiredProvidersProps {
 }
 
 const RequiredProviders: FC<RequiredProvidersProps> = props => {
-	const { children } = props;
-
 	return (
 		<QueryClientProvider client={queryClient}>
-			<TranslationsProvider>
-				<BrowserRouter basename={import.meta.env.BASE_URL}>{children}</BrowserRouter>
-			</TranslationsProvider>
+			<RootThemeProvider>
+				<TranslationsProvider>
+					<BrowserRouter basename={import.meta.env.BASE_URL}>
+						<React.Suspense fallback={null}>{props.children}</React.Suspense>
+					</BrowserRouter>
+				</TranslationsProvider>
+			</RootThemeProvider>
 		</QueryClientProvider>
 	);
 };

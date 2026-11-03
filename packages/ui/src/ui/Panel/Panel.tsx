@@ -1,32 +1,30 @@
-/** @format */
+import React, { FC } from 'react';
 
-import React, { FC, ReactNode } from 'react';
-
-import { compositeClassNames } from 'src/services/functions';
+import { compositeClassNames } from '../../services/functions';
 
 import classes from './panel.module.scss';
 
 interface PanelProps {
 	title: string;
 	subtitle?: string;
-	actions?: ReactNode;
+	actions?: React.ReactNode;
 	className?: string;
-	children: ReactNode;
+	children: React.ReactNode;
 }
 
 const Panel: FC<PanelProps> = props => {
-	const { title, subtitle, actions, className, children } = props;
+	const { title, subtitle, actions, className: providedClassName, children } = props;
 
 	return (
-		<section className={compositeClassNames(classes.root, className)}>
-			<header className={classes.header}>
+		<section className={compositeClassNames(classes.panel, providedClassName)}>
+			<header className={classes.panel_header}>
 				<div>
-					<h2 className={classes.title}>{title}</h2>
-					{subtitle && <p className={classes.subtitle}>{subtitle}</p>}
+					<h2 className={classes.panel_title}>{title}</h2>
+					{subtitle && <p className={classes.panel_subtitle}>{subtitle}</p>}
 				</div>
-				{actions && <div className={classes.actions}>{actions}</div>}
+				{actions && <div className={classes.panel_actions}>{actions}</div>}
 			</header>
-			<div className={classes.body}>{children}</div>
+			<div className={classes.panel_body}>{children}</div>
 		</section>
 	);
 };

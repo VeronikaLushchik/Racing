@@ -1,5 +1,3 @@
-/** @format */
-
 import { RefObject, useEffect, useRef } from 'react';
 
 import { useStableCallback } from 'src/services/customHooks';

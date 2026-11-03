@@ -1,13 +1,11 @@
-/** @format */
-
 import { useContext } from 'react';
 
-import { TranslationsContext } from './translationsContext';
+import translationsContext from './translationsContext';
 
-const useTranslation = () => useContext(TranslationsContext).t;
+const useTranslation = () => useContext(translationsContext).t;
 
 export const useLanguage = () => {
-	const { language, setLanguage } = useContext(TranslationsContext);
+	const { language, setLanguage } = useContext(translationsContext);
 	return { language, setLanguage };
 };
 

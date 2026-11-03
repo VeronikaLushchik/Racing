@@ -1,79 +1,89 @@
-/** @format */
-
-@import 'src/ui/common/variables';
+@import 'src/ui/common/colors';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
 
 .intro {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
-	gap: $space-4;
-	margin-bottom: $space-4;
+	gap: 16px;
 
-	h1 {
-		margin: 0 0 $space-1;
-		font-size: 22px;
-	}
-
-	p {
-		margin: 0;
-		color: var(--color-text-secondary);
-	}
+	margin-bottom: 16px;
 }
 
-.grid {
+.intro_title {
+	margin: 0 0 4px;
+
+	@extend %font-headline-sm;
+}
+
+.intro_text {
+	margin: 0;
+
+	color: $text_secondary;
+}
+
+.cards_grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-	gap: $space-4;
+	gap: 16px;
 }
 
-.card {
-	display: flex;
-	flex-direction: column;
-	gap: $space-3;
-	padding: $space-4;
-	border: 1px solid var(--color-border);
-	border-radius: $radius;
-	background: var(--color-surface);
+.source_card {
+	@include flex-list;
+	gap: 12px;
 
-	&[data-active] {
-		border-color: var(--color-accent);
+	padding: 16px;
+
+	@extend %card;
+
+	transition: border-color 0.2s ease;
+
+	&[data-is-active='true'] {
+		border-color: $stroke_active;
 	}
 }
 
-.cardHeader {
+.card_header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-
-	h2 {
-		margin: 0;
-		font-size: 16px;
-	}
 }
 
-.badge {
-	padding: 2px $space-2;
-	border-radius: 999px;
-	background: var(--color-accent);
-	color: var(--color-bg);
-	font-size: 11px;
+.card_title {
+	margin: 0;
+
+	@extend %font-title-md;
+}
+
+.active_badge {
+	padding: 2px 8px;
+
+	background-color: $button_primary;
+	border-radius: 100px;
+
+	color: $button_label_primary;
+	@extend %font-label-sm;
 	font-weight: 600;
 }
 
-.description {
+.card_description {
 	margin: 0;
-	font-size: 13px;
-	color: var(--color-text-secondary);
+
+	color: $text_secondary;
+	@extend %font-body-sm;
 }
 
-.form {
+.card_form {
 	flex: 1;
-	display: flex;
-	flex-direction: column;
-	gap: $space-3;
+
+	@include flex-list;
+	gap: 12px;
 }
 
-.error {
-	color: var(--color-status-error) !important;
-	font-size: 13px;
+.error_text {
+	margin: 0;
+
+	color: $system_dangerous;
+	@extend %font-body-sm;
 }

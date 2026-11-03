@@ -1,5 +1,3 @@
-/** @format */
-
 /**
  * GT7 "Simulator Interface" packet layout. GT7 does not publish an official spec;
  * offsets follow the community reverse-engineering (gt7dashboard, gt7telemetry docs).

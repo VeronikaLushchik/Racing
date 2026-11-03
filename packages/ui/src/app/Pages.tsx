@@ -1,10 +1,8 @@
-/** @format */
-
 import React, { FC } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 
 import PageContent from '~@ui/PageContent/PageContent';
-import TabsNav from './TabsNav';
+import TabsContent from './Layout/TabContent';
 
 import { appUrl } from 'src/constants/apiConstants';
 import { pagesConfig } from 'src/constants/pagesConfig';
@@ -27,7 +25,7 @@ const Pages: FC = () => (
 					key={key}
 					path={appUrl(page.path)}
 				>
-					<TabsNav page={page} />
+					<TabsContent page={page} />
 					<PageContent>
 						<Switch>
 							{tabs.map(([tabKey, tab]) => (

@@ -1,0 +1,23 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+
+.layout {
+	box-sizing: border-box;
+	min-height: 100vh;
+	background-color: $surface_secondary;
+}
+
+.main_content {
+	background-color: $surface_secondary;
+}
+
+.page_label {
+	margin: 0;
+
+	@extend %font-title-md;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+	color: $text_primary;
+}

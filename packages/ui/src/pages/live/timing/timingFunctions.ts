@@ -1,5 +1,3 @@
-/** @format */
-
 import { TLapSummary } from '@racing/shared';
 
 export type TSplitState = 'purple' | 'green' | 'yellow';

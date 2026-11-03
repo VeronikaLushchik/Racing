@@ -1,0 +1,57 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+
+.header {
+	z-index: $topZIndex;
+	position: sticky;
+	top: 0;
+
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px 24px;
+
+	min-height: $headerHeight;
+	padding: 8px 24px;
+
+	background-color: $surface_primary;
+	border-bottom: 1px solid $stroke_primary;
+	box-sizing: border-box;
+
+	@media all and (max-width: $mobileBreakpoint) {
+		padding: 8px 12px;
+	}
+}
+
+.start_side {
+	display: flex;
+	align-items: center;
+	gap: 24px;
+}
+
+.nav {
+	display: flex;
+	gap: 4px;
+}
+
+.nav_link {
+	padding: 4px 12px;
+
+	border-radius: 4px;
+
+	color: $text_secondary;
+	text-decoration: none;
+	@extend %font-label-lg;
+
+	transition: color 0.2s ease;
+
+	&:hover {
+		color: $text_primary;
+	}
+}
+
+.nav_link_active {
+	background-color: $surface_raised;
+	color: $text_primary;
+}

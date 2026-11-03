@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, useEffect, useRef } from 'react';
 
 import useTranslation from '~@engines/translations/useTranslation';
@@ -34,20 +32,20 @@ const PedalBars: FC = () => {
 	return (
 		<div className={classes.pedals}>
 			<div className={classes.pedal}>
-				<div className={classes.pedalTrack}>
+				<div className={classes.pedal_track}>
 					<div
 						ref={brakeRef}
-						className={classes.pedalFill}
+						className={classes.pedal_fill}
 						data-pedal="brake"
 					/>
 				</div>
 				<span>{t('driver.brake')}</span>
 			</div>
 			<div className={classes.pedal}>
-				<div className={classes.pedalTrack}>
+				<div className={classes.pedal_track}>
 					<div
 						ref={throttleRef}
-						className={classes.pedalFill}
+						className={classes.pedal_fill}
 						data-pedal="throttle"
 					/>
 				</div>

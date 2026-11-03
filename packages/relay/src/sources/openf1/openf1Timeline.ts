@@ -1,5 +1,3 @@
-/** @format */
-
 import { TFieldEntry, TLapSummary, TTelemetryFrame } from '@racing/shared';
 
 import { TOf1Interval, TOf1Position, TOf1SessionBundle, TOf1Stint } from './openf1Typings';

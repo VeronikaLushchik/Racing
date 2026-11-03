@@ -1,6 +1,4 @@
-/** @format */
-
-import React, { FC, ReactNode } from 'react';
+import React, { FC } from 'react';
 
 import Button from '~@ui/Button/Button';
 
@@ -14,7 +12,7 @@ interface SourceCardProps {
 	isActive: boolean;
 	canStart: boolean;
 	onStart: () => void;
-	children?: ReactNode;
+	children?: React.ReactNode;
 }
 
 const SourceCard: FC<SourceCardProps> = props => {
@@ -24,15 +22,15 @@ const SourceCard: FC<SourceCardProps> = props => {
 
 	return (
 		<section
-			className={classes.card}
-			data-active={isActive || undefined}
+			className={classes.source_card}
+			data-is-active={isActive}
 		>
-			<header className={classes.cardHeader}>
-				<h2>{title}</h2>
-				{isActive && <span className={classes.badge}>{t('source.active')}</span>}
+			<header className={classes.card_header}>
+				<h2 className={classes.card_title}>{title}</h2>
+				{isActive && <span className={classes.active_badge}>{t('source.active')}</span>}
 			</header>
-			<p className={classes.description}>{description}</p>
-			<div className={classes.form}>{children}</div>
+			<p className={classes.card_description}>{description}</p>
+			<div className={classes.card_form}>{children}</div>
 			<Button
 				variant="primary"
 				disabled={!canStart}

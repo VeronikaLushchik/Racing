@@ -1,0 +1,26 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+
+	background-color: $surface_secondary;
+
+	color: $text_primary;
+	@extend %font-body-md;
+
+	@extend %scrollbar-md;
+}
+
+button,
+input,
+select {
+	font: inherit;
+}

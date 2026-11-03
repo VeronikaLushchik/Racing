@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { FC, ReactNode } from 'react';
 
 import TelemetryProvider from 'src/modules/telemetry/TelemetryProvider';

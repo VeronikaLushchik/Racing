@@ -1,15 +1,13 @@
-/** @format */
-
 import { useContext, useSyncExternalStore } from 'react';
 
 import { TTelemetryFrame } from '@racing/shared';
 
-import { TelemetryContext, TTelemetryContext } from './telemetryContext';
+import telemetryContext, { TTelemetryContext } from './telemetryContext';
 
 import { TelemetryStore, TTelemetryMeta } from './telemetryStore';
 
 const useTelemetry = (): TTelemetryContext => {
-	const context = useContext(TelemetryContext);
+	const context = useContext(telemetryContext);
 	if (!context) throw new Error('useTelemetry must be used inside TelemetryProvider');
 	return context;
 };

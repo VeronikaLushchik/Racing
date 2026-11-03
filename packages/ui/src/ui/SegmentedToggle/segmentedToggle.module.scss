@@ -1,0 +1,57 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/shadows';
+
+.container {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	width: fit-content;
+	padding: 2px;
+	gap: 4px;
+
+	background-color: $surface_secondary;
+
+	border-radius: 16px;
+}
+
+.segment {
+	min-width: 40px;
+	height: 26px;
+	padding: 0 10px;
+
+	flex-grow: 1;
+
+	background-color: transparent;
+
+	border: none;
+	border-radius: 64px;
+
+	color: $text_secondary;
+	white-space: nowrap;
+	text-align: center;
+	@extend %font-label-md;
+
+	transition: background-color 0.2s ease;
+
+	&[data-is-active='true'] {
+		background-color: $surface_raised;
+
+		@extend %shadow-sm;
+
+		color: $text_primary;
+	}
+
+	&[data-is-active='false']:not(:disabled) {
+		cursor: pointer;
+
+		&:hover {
+			opacity: 0.7;
+		}
+	}
+
+	&:disabled {
+		color: $text_disabled;
+	}
+}

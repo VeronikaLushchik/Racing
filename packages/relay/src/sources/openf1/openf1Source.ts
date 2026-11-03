@@ -1,5 +1,3 @@
-/** @format */
-
 import { TSourceOptions } from '@racing/shared';
 
 import { TSourceSink, TTelemetrySource } from '../sourceTypings';

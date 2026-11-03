@@ -1,5 +1,3 @@
-/** @format */
-
 import { ServerStatusError } from './serverStatusError';
 
 const json = async <T>(url: string, init?: RequestInit): Promise<T> => {

@@ -7,6 +7,7 @@
 		"build": "tsc -p tsconfig.json --noEmit && vite build",
 		"preview": "vite preview",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"translations:keys": "node scripts/generateTranslationKeys.cjs",
 		"test:unit": "tsc -p tsconfig.test.json && node --test scripts/*.test.cjs"
 	},
 	"dependencies": {

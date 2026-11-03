@@ -1,5 +1,3 @@
-/** @format */
-
 import { TTelemetryFrame, TWheelTuple } from '@racing/shared';
 
 import { TGt7Packet } from './gt7Packet';

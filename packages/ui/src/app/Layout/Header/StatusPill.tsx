@@ -1,11 +1,9 @@
-/** @format */
-
 import React, { FC } from 'react';
 
 import useTranslation from '~@engines/translations/useTranslation';
-import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
+import { useTelemetryMeta } from '../../../modules/telemetry/useTelemetry';
 
-import classes from './layout.module.scss';
+import classes from './statusPill.module.scss';
 
 const StatusPill: FC = () => {
 	const t = useTranslation();
@@ -20,13 +18,13 @@ const StatusPill: FC = () => {
 
 	return (
 		<div
-			className={classes.status}
+			className={classes.status_pill}
 			data-relay-state={state}
 			role="status"
 		>
-			<span className={classes.statusDot} />
-			<span className={classes.statusLabel}>{label}</span>
-			<span className={classes.statusDetail}>{detail}</span>
+			<span className={classes.status_dot} />
+			<span className={classes.status_label}>{label}</span>
+			<span className={classes.status_detail}>{detail}</span>
 		</div>
 	);
 };
