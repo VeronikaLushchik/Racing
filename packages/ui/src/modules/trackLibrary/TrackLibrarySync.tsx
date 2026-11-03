@@ -1,0 +1,53 @@
+import { FC, useEffect } from 'react';
+
+import { buildOutline } from '~@engines/racingMath/trackOutlineModel';
+import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
+import { findBestRecord } from 'src/pages/analysis/common/analysisFunctions';
+import { trackLibrary } from './trackLibrary';
+
+const slug = (text: string): string =>
+	text
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '');
+
+/**
+ * Saves the outline of the session's best clean lap, so the track can be picked again later.
+ * Sources without a track name (GT7) get a dated name the driver can change.
+ */
+const TrackLibrarySync: FC = () => {
+	const { lapRecords, session } = useTelemetryMeta();
+
+	useEffect(() => {
+		const best = findBestRecord(lapRecords);
+		if (!session || !best || !best.isValid || best.isPitLap) {
+			return;
+		}
+		const savedAt = Date.now();
+		const name =
+			session.track ??
+			`${session.title} · ${new Date(savedAt).toLocaleString(undefined, {
+				dateStyle: 'short',
+				timeStyle: 'short',
+			})}`;
+		trackLibrary.add(
+			buildOutline(
+				{
+					step: best.step,
+					x: best.channels.x,
+					z: best.channels.z,
+					lapTimeMs: best.lapTimeMs,
+				},
+				{
+					id: session.track ? slug(session.track) : `track-${session.sessionId}`,
+					name,
+					savedAt,
+				},
+			),
+		);
+	}, [lapRecords, session]);
+
+	return null;
+};
+
+export default TrackLibrarySync;

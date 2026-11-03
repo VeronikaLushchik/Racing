@@ -183,4 +183,14 @@
 	<entry key="pit.gainBasis">На основі деградації {0} с за коло і шин віком {1} кіл.</entry>
 	<entry key="pit.target">P{0} {1} попереду на {2} с: андеркат спрацює, якщо суперник пробуде на трасі ще {3} кіл.</entry>
 	<entry key="pit.targetNever">P{0} {1} попереду на {2} с: без деградації шин андеркат не спрацює.</entry>
+	<entry key="miniMap.title">Позиція на трасі</entry>
+	<entry key="miniMap.track">Траса</entry>
+	<entry key="miniMap.auto">Авто: знайти за позицією авто</entry>
+	<entry key="miniMap.autoFound">Авто: {0}</entry>
+	<entry key="miniMap.noTracks">Збережених трас ще немає. Траса зберігається тут після першого чистого кола.</entry>
+	<entry key="miniMap.notFound">Жодна збережена траса не збігається з позицією авто. Виберіть трасу або проїдьте чисте коло.</entry>
+	<entry key="miniMap.byDistance">Координати авто не збігаються з цією трасою, тому його розміщено за дистанцією кола.</entry>
+	<entry key="miniMap.hint">Синя точка: авто. Помаранчеве кільце: точка під курсором графіка.</entry>
+	<entry key="miniMap.name">Назва траси</entry>
+	<entry key="miniMap.forget">Забути</entry>
 </properties>

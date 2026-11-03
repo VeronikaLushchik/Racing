@@ -1,12 +1,14 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import Panel from '~@ui/Panel/Panel';
 import LapSelect from '../common/LapSelect';
 import CornerTable from './CornerTable';
 import LapCompareChart from './LapCompareChart';
+import MiniTrackMap, { TMapCursor } from 'src/modules/trackLibrary/MiniTrackMap';
 
 import useTranslation from '~@engines/translations/useTranslation';
 import { buildDeltaSeries, compareLaps } from '~@engines/racingMath/ghostLapModel';
+import { valueAtDistance } from '~@engines/racingMath/distanceResampling';
 import { formatDelta, formatLapTime } from 'src/services/functions';
 import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
 import { findBestRecord, pickDefaultLaps, resolveRecord } from '../common/analysisFunctions';
@@ -23,6 +25,7 @@ const GhostLap: FC = () => {
 
 	const [referenceLap, setReferenceLap] = useState<number | null>(null);
 	const [compareLap, setCompareLap] = useState<number | null>(null);
+	const [cursor, setCursor] = useState<TMapCursor | null>(null);
 
 	const defaults = useMemo(() => pickDefaultLaps(lapRecords), [lapRecords]);
 	const bestLap = useMemo(() => findBestRecord(lapRecords)?.lap ?? null, [lapRecords]);
@@ -38,6 +41,21 @@ const GhostLap: FC = () => {
 		[reference, compare],
 	);
 	const corners = useMemo(() => comparisons.map(item => item.corner), [comparisons]);
+
+	const handleCursor = useCallback(
+		(distance: number | null) => {
+			if (distance === null || !compare) {
+				setCursor(null);
+				return;
+			}
+			setCursor({
+				x: valueAtDistance(compare.channels.x, compare.step, distance),
+				z: valueAtDistance(compare.channels.z, compare.step, distance),
+				lapDistance: distance,
+			});
+		},
+		[compare],
+	);
 
 	const lanes = useMemo<TCompareLane[]>(
 		() => [
@@ -144,22 +162,28 @@ const GhostLap: FC = () => {
 				</div>
 			</div>
 
-			<Panel
-				title={t('ghost.overlay')}
-				subtitle={t('ghost.overlayHint', referenceLabel, compareLabel)}
-				className={classes.overlay}
-			>
-				<LapCompareChart
-					lanes={lanes}
-					reference={reference}
-					compare={compare}
-					referenceLabel={referenceLabel}
-					compareLabel={compareLabel}
-					delta={delta}
-					corners={corners}
-					ariaLabel={t('ghost.overlay')}
-				/>
-			</Panel>
+			<div className={classes.overlay_row}>
+				<Panel
+					title={t('ghost.overlay')}
+					subtitle={t('ghost.overlayHint', referenceLabel, compareLabel)}
+					className={classes.overlay}
+				>
+					<LapCompareChart
+						lanes={lanes}
+						reference={reference}
+						compare={compare}
+						referenceLabel={referenceLabel}
+						compareLabel={compareLabel}
+						delta={delta}
+						corners={corners}
+						ariaLabel={t('ghost.overlay')}
+						onCursor={handleCursor}
+					/>
+				</Panel>
+				<Panel title={t('miniMap.title')}>
+					<MiniTrackMap cursor={cursor} />
+				</Panel>
+			</div>
 
 			<Panel
 				title={t('ghost.corners')}

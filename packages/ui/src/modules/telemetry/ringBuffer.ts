@@ -8,6 +8,8 @@ export const TRACE_CHANNELS = [
 	'gLat',
 	'gLong',
 	'lapDistance',
+	'x',
+	'z',
 ] as const;
 
 export type TTraceChannel = (typeof TRACE_CHANNELS)[number];

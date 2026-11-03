@@ -18,15 +18,28 @@ interface LapCompareChartProps {
 	delta: Float32Array;
 	corners: TCorner[];
 	ariaLabel: string;
+	/** Cursor position on the distance axis, m; null when it leaves the chart. */
+	onCursor?: (distance: number | null) => void;
 }
 
 const LapCompareChart: FC<LapCompareChartProps> = props => {
-	const { lanes, reference, compare, referenceLabel, compareLabel, delta, corners, ariaLabel } =
-		props;
+	const {
+		lanes,
+		reference,
+		compare,
+		referenceLabel,
+		compareLabel,
+		delta,
+		corners,
+		ariaLabel,
+		onCursor,
+	} = props;
 
 	const theme = useTheme();
 
 	const containerRef = useRef<HTMLDivElement>(null);
+	const onCursorRef = useRef(onCursor);
+	onCursorRef.current = onCursor;
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -43,6 +56,12 @@ const LapCompareChart: FC<LapCompareChartProps> = props => {
 			chart.setOption(buildLapCompareOption(lanes, laps, theme, container.clientHeight));
 		});
 		observer.observe(container);
+
+		chart.on('updateAxisPointer', (event: unknown) => {
+			const value = (event as { axesInfo?: { value: number }[] }).axesInfo?.[0]?.value;
+			onCursorRef.current?.(value === undefined ? null : value);
+		});
+		chart.on('globalout', () => onCursorRef.current?.(null));
 
 		return () => {
 			observer.disconnect();
