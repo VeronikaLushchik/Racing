@@ -5,6 +5,19 @@ export class LapTrace {
 
 	constructor(readonly lap: number) {}
 
+	/** Trace rebuilt from a stored lap (for example after a page reload). */
+	static fromArrays(
+		lap: number,
+		distance: ArrayLike<number>,
+		timeMs: ArrayLike<number>,
+	): LapTrace {
+		const trace = new LapTrace(lap);
+		for (let i = 0; i < distance.length; i += 1) {
+			trace.push(distance[i], timeMs[i]);
+		}
+		return trace;
+	}
+
 	push(distance: number, timeMs: number): void {
 		const last = this.distance[this.distance.length - 1];
 		// Keep distance strictly increasing so the trace can be searched.
