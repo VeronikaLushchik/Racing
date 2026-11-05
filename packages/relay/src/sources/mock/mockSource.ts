@@ -190,7 +190,12 @@ export class MockSource implements TTelemetrySource {
 			gear,
 			throttle,
 			brake,
-			steer: clamp(-curvature / 0.03, -1, 1),
+			// A little understeer above 0.8 G so the setup advisor has something to find.
+			steer: clamp(
+				(-curvature / 0.03) * (1 + 0.35 * Math.max(0, Math.abs(gLat) - 0.8)),
+				-1,
+				1,
+			),
 			gLat,
 			gLong: s.gLong,
 			x: this.track.x[index],

@@ -11,6 +11,7 @@ import {
 } from '@racing/shared';
 
 import { computeDelta, LapTrace } from '~@engines/racingMath/deltaModel';
+import { SetupEvidenceCollector } from '~@engines/racingMath/setupAdvisorModel';
 
 import { lapArchive } from './lapArchive';
 import { LapRecorder } from './lapRecorder';
@@ -69,6 +70,8 @@ export class TelemetryStore {
 	latestFrame: TTelemetryFrame | null = null;
 	/** Increments on every frame; loops compare it to skip redundant draws. */
 	frameVersion = 0;
+	/** Handling evidence for the setup advisor, gathered from every frame of the session. */
+	readonly setupEvidence = new SetupEvidenceCollector();
 
 	private meta: TTelemetryMeta = initialMeta;
 	private readonly metaListeners = new Set<TListener>();
@@ -141,6 +144,7 @@ export class TelemetryStore {
 			this.previousTrace = null;
 			this.referenceTrace = null;
 			this.lapRecorders.clear();
+			this.setupEvidence.reset();
 			this.updateMeta({
 				session,
 				laps: [],
@@ -158,6 +162,7 @@ export class TelemetryStore {
 	private handleFrame(frame: TTelemetryFrame): void {
 		this.latestFrame = frame;
 		this.frameVersion += 1;
+		this.setupEvidence.push(frame);
 		this.buffer.push({
 			t: frame.t,
 			speed: frame.speed,

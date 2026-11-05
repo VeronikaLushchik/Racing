@@ -7,6 +7,8 @@ import PitWindow from 'src/pages/strategy/pitWindow/PitWindow';
 import TyreDegradation from 'src/pages/strategy/tyreDegradation/TyreDegradation';
 import Weather from 'src/pages/strategy/weather/Weather';
 import SourcePage from 'src/pages/source/SourcePage';
+import SetupAdvisor from 'src/pages/setup/advisor/SetupAdvisor';
+import SetupSheet from 'src/pages/setup/sheet/SetupSheet';
 
 import { TPagesConfig } from 'src/typings';
 
@@ -84,6 +86,25 @@ export const pagesConfig: TPagesConfig = {
 				tKey: 'pagesNames.strategy.weatherTab',
 				path: '/weather',
 				Component: Weather,
+			},
+		},
+	},
+	setup: {
+		path: '/setup',
+		title: 'Setup',
+		tKey: 'pagesNames.setup.setup',
+		tabs: {
+			advisor: {
+				title: 'Advisor',
+				tKey: 'pagesNames.setup.advisorTab',
+				path: '/advisor',
+				Component: SetupAdvisor,
+			},
+			sheet: {
+				title: 'Car setup',
+				tKey: 'pagesNames.setup.sheetTab',
+				path: '/sheet',
+				Component: SetupSheet,
 			},
 		},
 	},
