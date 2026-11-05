@@ -122,3 +122,14 @@ test('undercut grows with laps the rival stays out', () => {
 	assert.equal(target.lapsNeeded, 3);
 	assert.equal(undercutTarget(field, 0, 10).lapsNeeded, null);
 });
+
+test('car profiles: F1 data defaults to F1, sims to GT3, and F1 burns less time per litre', () => {
+	const { CAR_PROFILES, defaultCarProfileId, isCarProfileId } = require(`${base}/carProfiles`);
+	assert.equal(defaultCarProfileId('f1'), 'f1');
+	assert.equal(defaultCarProfileId('gt7'), 'gt3');
+	assert.equal(defaultCarProfileId(null), 'gt3');
+	assert.equal(CAR_PROFILES.gt3.fuelEffectSPerL, FUEL_EFFECT_S_PER_L);
+	assert.ok(CAR_PROFILES.f1.fuelEffectSPerL < CAR_PROFILES.gt3.fuelEffectSPerL);
+	assert.ok(isCarProfileId('road'));
+	assert.ok(!isCarProfileId('toString'));
+});

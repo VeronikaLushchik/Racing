@@ -65,6 +65,19 @@
 	<entry key="car.fr">FR</entry>
 	<entry key="car.rl">RL</entry>
 	<entry key="car.rr">RR</entry>
+	<entry key="carProfile.label">Car class</entry>
+	<entry key="carProfile.gt3">GT3</entry>
+	<entry key="carProfile.f1">F1</entry>
+	<entry key="carProfile.road">Road</entry>
+	<entry key="car.chassis">Wheels and suspension</entry>
+	<entry key="car.chassisHint">Slip: wheel speed against car speed. Locking is negative, wheelspin positive.</entry>
+	<entry key="car.slipLock">locking</entry>
+	<entry key="car.slipGrip">grip</entry>
+	<entry key="car.slipSpin">wheelspin</entry>
+	<entry key="car.rideHeight">Ride height</entry>
+	<entry key="car.engine">Engine</entry>
+	<entry key="car.water">Coolant</entry>
+	<entry key="car.oil">Oil</entry>
 	<entry key="timing.currentLap">Current lap</entry>
 	<entry key="timing.lastLap">Last lap</entry>
 	<entry key="timing.bestLap">Best lap</entry>
@@ -90,7 +103,7 @@
 	<entry key="analysis.best">best</entry>
 	<entry key="analysis.lapOption">Lap {0} · {1}</entry>
 	<entry key="analysis.lapShort">Lap {0}</entry>
-	<entry key="analysis.recordingHint">Laps are recorded in this browser tab while the dashboard is open. To try it, start the demo circuit on the Data source page.</entry>
+	<entry key="analysis.recordingHint">Laps are recorded while the dashboard is open and kept in this browser after a reload. To try it, start the demo circuit on the Data source page.</entry>
 	<entry key="ghost.title">Ghost lap</entry>
 	<entry key="ghost.needLaps">Complete at least two laps to compare them.</entry>
 	<entry key="ghost.reference">Reference lap</entry>
@@ -145,7 +158,7 @@
 	<entry key="degradation.fuelPerLap">Fuel per lap</entry>
 	<entry key="degradation.fuelHint">Each litre costs about 0.03 s</entry>
 	<entry key="degradation.chart">Lap times and forecast</entry>
-	<entry key="degradation.chartHint">Dots: laps of this stint. Dashed: fitted trend. Orange: next laps, dotted lines: 95% band.</entry>
+	<entry key="degradation.chartHint">Dots: laps of this stint. Dashed: fitted trend. Orange: next laps, dotted lines: 95% band. Fuel effect {0} s per litre.</entry>
 	<entry key="degradation.lapTime">Lap time</entry>
 	<entry key="degradation.trend">Trend</entry>
 	<entry key="degradation.forecast">Forecast</entry>

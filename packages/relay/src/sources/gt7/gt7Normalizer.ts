@@ -4,6 +4,10 @@ import { TGt7Packet } from './gt7Packet';
 
 const G = 9.81;
 const SMOOTHING = 0.25;
+/** Steering angle mapped to full lock (±1). Not in any spec; check against a real wheel. */
+const STEER_FULL_LOCK_RAD = Math.PI / 4;
+
+const quadOf = (values: number[]): TWheelTuple<number> => values.slice(0, 4) as TWheelTuple<number>;
 
 /**
  * Converts raw GT7 packets into normalized frames. GT7 has no lap distance, no G sensor and
@@ -58,7 +62,10 @@ export class Gt7Normalizer {
 			gear: packet.gear === 15 ? 0 : packet.gear,
 			throttle: packet.throttle,
 			brake: packet.brake,
-			steer: null,
+			steer:
+				packet.wheelRotation === null
+					? null
+					: Math.max(-1, Math.min(1, -packet.wheelRotation / STEER_FULL_LOCK_RAD)),
 			gLat: this.gLat,
 			gLong: this.gLong,
 			x: packet.position[0],
@@ -69,6 +76,12 @@ export class Gt7Normalizer {
 			tyreWear: null,
 			fuel: packet.fuelLevel,
 			position: packet.racePosition > 0 ? packet.racePosition : null,
+			wheelSpeeds: quadOf(
+				packet.wheelRps.map((rps, i) => Math.abs(rps) * packet.tyreRadius[i] * 3.6),
+			),
+			suspension: quadOf(packet.suspensionHeight),
+			waterTemp: packet.waterTemp,
+			oilTemp: packet.oilTemp,
 		};
 	}
 }

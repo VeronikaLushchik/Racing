@@ -101,6 +101,9 @@ export class MockSource implements TTelemetrySource {
 				hasSectors: true,
 				hasOpponents: true,
 				hasMeasuredG: true,
+				hasWheelSpeeds: true,
+				hasSuspension: true,
+				hasEngineTemps: true,
 			},
 		});
 		this.sink.status('streaming', null);
@@ -172,7 +175,34 @@ export class MockSource implements TTelemetrySource {
 			tyreWear: s.tyreWear.slice() as TWheelTuple<number>,
 			fuel: s.fuel,
 			position: this.playerPosition(),
+			wheelSpeeds: this.wheelSpeeds(speedKmh, brake, throttle, gear),
+			suspension: this.suspension(gLat, s.gLong),
+			waterTemp: 88 + throttle * 4,
+			oilTemp: 102 + throttle * 6,
 		};
+	}
+
+	/** Fronts lock a little under the hardest braking, rears spin on full throttle in low gears. */
+	private wheelSpeeds(
+		speedKmh: number,
+		brake: number,
+		throttle: number,
+		gear: number,
+	): TWheelTuple<number> {
+		const lock = 1 - 0.08 * clamp((brake - 0.85) / 0.15, 0, 1);
+		const spin = gear <= 2 ? 1 + 0.06 * clamp((throttle - 0.9) / 0.1, 0, 1) : 1;
+		return [speedKmh * lock, speedKmh * lock, speedKmh * spin, speedKmh * spin];
+	}
+
+	/** Ride height per wheel from load transfer: braking dives the front, corners roll. */
+	private suspension(gLat: number, gLong: number): TWheelTuple<number> {
+		return [0, 1, 2, 3].map(i => {
+			const isFront = i < 2;
+			const isLeft = i % 2 === 0;
+			const pitch = (isFront ? -gLong : gLong) * 0.008;
+			const roll = (isLeft ? gLat : -gLat) * 0.01;
+			return clamp(0.07 - pitch - roll, 0.02, 0.1);
+		}) as TWheelTuple<number>;
 	}
 
 	private tick(): void {

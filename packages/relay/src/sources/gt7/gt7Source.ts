@@ -6,9 +6,10 @@ import { LapTracker } from '../../pipeline/lapTracker';
 import { TSourceSink, TTelemetrySource } from '../sourceTypings';
 import { GT7_HEARTBEAT_INTERVAL_MS, GT7_HEARTBEATS, GT7_SILENCE_TIMEOUT_MS } from './gt7Constants';
 import { Gt7Normalizer } from './gt7Normalizer';
-import { decryptGt7, parseGt7 } from './gt7Packet';
+import { decryptGt7Any, parseGt7 } from './gt7Packet';
 
-const HEARTBEAT = 'A' as const;
+/** Packet B adds the steering angle to A; consoles that only know A still answer with A. */
+const HEARTBEAT = 'B' as const;
 
 /** Live Gran Turismo 7 telemetry from a PlayStation in the same local network. */
 export class Gt7Source implements TTelemetrySource {
@@ -78,7 +79,7 @@ export class Gt7Source implements TTelemetrySource {
 			trackLength: this.trackLength,
 			capabilities: {
 				isLive: true,
-				hasSteering: false,
+				hasSteering: true,
 				hasTyreTemps: true,
 				hasTyreZones: false,
 				hasBrakeTemps: false,
@@ -87,12 +88,15 @@ export class Gt7Source implements TTelemetrySource {
 				hasSectors: this.trackLength !== null,
 				hasOpponents: false,
 				hasMeasuredG: false,
+				hasWheelSpeeds: true,
+				hasSuspension: true,
+				hasEngineTemps: true,
 			},
 		});
 	}
 
 	private handleMessage(message: Buffer): void {
-		const plain = decryptGt7(new Uint8Array(message), HEARTBEAT);
+		const plain = decryptGt7Any(new Uint8Array(message));
 		if (!plain) return;
 		const packet = parseGt7(plain);
 		if (packet.packetId === this.lastPacketId) return;

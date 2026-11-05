@@ -36,7 +36,26 @@ export interface TGt7Packet {
 	isPaused: boolean;
 	isLoading: boolean;
 	carCode: number;
+	/** Metres above the road. */
+	bodyHeight: number;
+	/** Bar above atmospheric (GT7 reports 1 + boost). */
+	turboBoost: number;
+	oilPressure: number;
+	waterTemp: number;
+	oilTemp: number;
+	/** Wheel spin, rad/s (sign depends on direction). */
+	wheelRps: TQuad;
+	/** m */
+	tyreRadius: TQuad;
+	/** m */
+	suspensionHeight: TQuad;
+	/** 0..1 */
+	clutchPedal: number;
+	/** Steering wheel angle, radians; null in packet A, which does not carry it. */
+	wheelRotation: number | null;
 }
+
+type TQuad = [number, number, number, number];
 
 const nonceFor = (iv1: number, heartbeat: TGt7Heartbeat): Uint8Array => {
 	const iv2 = (iv1 ^ GT7_HEARTBEATS[heartbeat].xor) >>> 0;
@@ -49,11 +68,26 @@ const nonceFor = (iv1: number, heartbeat: TGt7Heartbeat): Uint8Array => {
 
 /** Decrypts a raw UDP datagram; returns null when the magic does not match (wrong key/variant). */
 export const decryptGt7 = (raw: Uint8Array, heartbeat: TGt7Heartbeat = 'A'): Uint8Array | null => {
-	if (raw.length < GT7_HEARTBEATS.A.size) return null;
+	if (raw.length < GT7_HEARTBEATS[heartbeat].size) return null;
 	const iv1 = new DataView(raw.buffer, raw.byteOffset, raw.length).getUint32(GT7_IV_OFFSET, true);
 	const plain = salsa20Xor(GT7_KEY, nonceFor(iv1, heartbeat), raw);
 	const magic = new DataView(plain.buffer).getUint32(0, true);
 	return magic === GT7_MAGIC ? plain : null;
+};
+
+/**
+ * Decrypts a datagram of any known variant. The variant is guessed from the size (B and ~ are
+ * longer than A) and the other one is tried when the magic does not match.
+ */
+export const decryptGt7Any = (raw: Uint8Array): Uint8Array | null => {
+	const order: TGt7Heartbeat[] = raw.length >= GT7_HEARTBEATS.B.size ? ['B', 'A'] : ['A'];
+	for (const heartbeat of order) {
+		const plain = decryptGt7(raw, heartbeat);
+		if (plain) {
+			return plain;
+		}
+	}
+	return null;
 };
 
 /** Encrypts a plain packet the way the console does. Used by tests and the fake console tool. */
@@ -71,6 +105,12 @@ export const parseGt7 = (plain: Uint8Array): TGt7Packet => {
 	const v = new DataView(plain.buffer, plain.byteOffset, plain.length);
 	const f32 = (offset: number): number => v.getFloat32(offset, true);
 	const gears = v.getUint8(O.gears);
+	const quad = (offset: number): TQuad => [
+		f32(offset),
+		f32(offset + 4),
+		f32(offset + 8),
+		f32(offset + 12),
+	];
 	const flags = v.getUint16(O.flags, true);
 
 	return {
@@ -102,14 +142,29 @@ export const parseGt7 = (plain: Uint8Array): TGt7Packet => {
 		isPaused: (flags & GT7_FLAGS.paused) !== 0,
 		isLoading: (flags & GT7_FLAGS.loadingOrProcessing) !== 0,
 		carCode: v.getInt32(O.carCode, true),
+		bodyHeight: f32(O.bodyHeight),
+		turboBoost: f32(O.turboBoost),
+		oilPressure: f32(O.oilPressure),
+		waterTemp: f32(O.waterTemp),
+		oilTemp: f32(O.oilTemp),
+		wheelRps: quad(O.wheelRps),
+		tyreRadius: quad(O.tyreRadius),
+		suspensionHeight: quad(O.suspensionHeight),
+		clutchPedal: f32(O.clutchPedal),
+		wheelRotation: plain.length >= GT7_HEARTBEATS.B.size ? f32(O.wheelRotation) : null,
 	};
 };
 
 /** Builds a plain (unencrypted) packet; inverse of parseGt7. Used by tests and the fake console. */
-export const buildGt7Plain = (p: Partial<TGt7Packet>): Uint8Array => {
-	const plain = new Uint8Array(GT7_HEARTBEATS.A.size);
+export const buildGt7Plain = (
+	p: Partial<TGt7Packet>,
+	heartbeat: TGt7Heartbeat = 'A',
+): Uint8Array => {
+	const plain = new Uint8Array(GT7_HEARTBEATS[heartbeat].size);
 	const v = new DataView(plain.buffer);
 	const f32 = (offset: number, value = 0): void => v.setFloat32(offset, value, true);
+	const quad = (offset: number, values: TQuad = [0, 0, 0, 0]): void =>
+		values.forEach((value, i) => f32(offset + i * 4, value));
 	v.setUint32(O.magic, GT7_MAGIC, true);
 	const [px, py, pz] = p.position ?? [0, 0, 0];
 	f32(O.positionX, px);
@@ -149,5 +204,17 @@ export const buildGt7Plain = (p: Partial<TGt7Packet>): Uint8Array => {
 	v.setUint8(O.throttle, Math.round((p.throttle ?? 0) * 255));
 	v.setUint8(O.brake, Math.round((p.brake ?? 0) * 255));
 	v.setInt32(O.carCode, p.carCode ?? 0, true);
+	f32(O.bodyHeight, p.bodyHeight);
+	f32(O.turboBoost, p.turboBoost);
+	f32(O.oilPressure, p.oilPressure);
+	f32(O.waterTemp, p.waterTemp);
+	f32(O.oilTemp, p.oilTemp);
+	quad(O.wheelRps, p.wheelRps);
+	quad(O.tyreRadius, p.tyreRadius);
+	quad(O.suspensionHeight, p.suspensionHeight);
+	f32(O.clutchPedal, p.clutchPedal);
+	if (plain.length >= GT7_HEARTBEATS.B.size) {
+		f32(O.wheelRotation, p.wheelRotation ?? 0);
+	}
 	return plain;
 };

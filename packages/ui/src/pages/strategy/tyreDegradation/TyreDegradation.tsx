@@ -2,14 +2,16 @@ import React, { FC } from 'react';
 
 import Panel from '~@ui/Panel/Panel';
 import DegradationChart from './DegradationChart';
+import CarProfileToggle from 'src/modules/carProfile/CarProfileToggle';
 
 import useTranslation from '~@engines/translations/useTranslation';
 import { formatLapTime } from 'src/services/functions';
+import { useCarProfile } from 'src/modules/carProfile/carProfile';
 import useDegradation from '../common/useDegradation';
 import { formatLapsLeft, formatSigned, trendTone } from '../common/strategyFunctions';
 
 import { MIN_FIT_LAPS } from '~@engines/racingMath/tyreDegradationModel';
-import { TYRE_WINDOW_C, WHEELS } from 'src/pages/live/carHealth/carHealthConstants';
+import { WHEELS } from 'src/pages/live/carHealth/carHealthConstants';
 import { HIGH_DEGRADATION_S, WARNING_LAPS, WEAR_LIMIT } from '../common/strategyConstants';
 
 import classes from '../common/strategy.module.scss';
@@ -17,10 +19,14 @@ import classes from '../common/strategy.module.scss';
 const TyreDegradation: FC = () => {
 	const t = useTranslation();
 	const result = useDegradation();
+	const profile = useCarProfile();
 
 	if (!result) {
 		return (
-			<Panel title={t('degradation.title')}>
+			<Panel
+				title={t('degradation.title')}
+				actions={<CarProfileToggle />}
+			>
 				<p className={classes.empty_text}>{t('degradation.needLaps', MIN_FIT_LAPS)}</p>
 				<p className={classes.empty_hint}>{t('analysis.recordingHint')}</p>
 			</Panel>
@@ -109,7 +115,8 @@ const TyreDegradation: FC = () => {
 			<div className={classes.columns}>
 				<Panel
 					title={t('degradation.chart')}
-					subtitle={t('degradation.chartHint')}
+					subtitle={t('degradation.chartHint', profile.fuelEffectSPerL)}
+					actions={<CarProfileToggle />}
 					className={classes.chart_panel}
 				>
 					<DegradationChart
@@ -121,8 +128,8 @@ const TyreDegradation: FC = () => {
 					title={t('degradation.tyres')}
 					subtitle={t(
 						'degradation.tyresHint',
-						TYRE_WINDOW_C.min,
-						TYRE_WINDOW_C.max,
+						profile.tyreWindowC.min,
+						profile.tyreWindowC.max,
 						Math.round(WEAR_LIMIT * 100),
 					)}
 				>

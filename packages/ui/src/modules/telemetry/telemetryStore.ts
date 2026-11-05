@@ -11,6 +11,7 @@ import {
 
 import { computeDelta, LapTrace } from '~@engines/racingMath/deltaModel';
 
+import { lapArchive } from './lapArchive';
 import { LapRecorder } from './lapRecorder';
 import { TelemetryRingBuffer } from './ringBuffer';
 
@@ -127,6 +128,7 @@ export class TelemetryStore {
 			this.referenceTrace = null;
 			this.lapRecorders.clear();
 			this.updateMeta({ session, laps: [], lapRecords: [], field: [], bestLapMs: null });
+			void this.restoreLaps(session.sessionId);
 		} else {
 			this.updateMeta({ session });
 		}
@@ -176,18 +178,51 @@ export class TelemetryStore {
 			const trace = [this.previousTrace, this.currentTrace].find(tr => tr?.lap === lap.lap);
 			if (trace && trace.length > 10) this.referenceTrace = trace;
 		}
-		const record = this.lapRecorders.get(lap.lap)?.finish(lap) ?? null;
+		const record =
+			this.lapRecorders.get(lap.lap)?.finish(lap, this.meta.session?.trackLength ?? null) ??
+			null;
 		this.lapRecorders.delete(lap.lap);
-		const lapRecords = record
-			? [...this.meta.lapRecords.filter(r => r.lap !== lap.lap), record]
-					.sort((a, b) => a.lap - b.lap)
-					.slice(-MAX_LAP_RECORDS)
-			: this.meta.lapRecords;
+		const sessionId = this.meta.session?.sessionId;
+		if (record && sessionId) {
+			void lapArchive.save(sessionId, record);
+		}
+		const lapRecords = record ? this.mergeLapRecords([record]) : this.meta.lapRecords;
 		this.updateMeta({
 			laps,
 			lapRecords,
 			bestLapMs: isNewBest ? lap.lapTimeMs : this.meta.bestLapMs,
 		});
+	}
+
+	/** Brings back the laps of this session saved before the page was reloaded. */
+	private async restoreLaps(sessionId: string): Promise<void> {
+		const saved = await lapArchive.load(sessionId);
+		if (saved.length === 0 || this.meta.session?.sessionId !== sessionId) {
+			return;
+		}
+		// Laps recorded since the page opened win over their saved copies.
+		const known = new Set(this.meta.lapRecords.map(record => record.lap));
+		const lapRecords = this.mergeLapRecords(saved.filter(record => !known.has(record.lap)));
+		if (!this.referenceTrace) {
+			const best = lapRecords
+				.filter(record => record.isValid)
+				.sort((a, b) => a.lapTimeMs - b.lapTimeMs)[0];
+			if (best) {
+				this.referenceTrace = LapTrace.fromArrays(
+					best.lap,
+					best.distance,
+					best.channels.timeMs,
+				);
+			}
+		}
+		this.updateMeta({ lapRecords });
+	}
+
+	private mergeLapRecords(records: TLapRecord[]): TLapRecord[] {
+		const laps = new Set(records.map(record => record.lap));
+		return [...this.meta.lapRecords.filter(record => !laps.has(record.lap)), ...records]
+			.sort((a, b) => a.lap - b.lap)
+			.slice(-MAX_LAP_RECORDS);
 	}
 
 	private updateMeta(patch: Partial<TTelemetryMeta>): void {

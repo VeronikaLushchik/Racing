@@ -49,3 +49,14 @@ test('delta is negative when ahead of the reference lap', () => {
 	assert.equal(computeDelta(reference, 500, 9500), -0.5);
 	assert.equal(computeDelta(null, 500, 9500), null);
 });
+
+test('lap trace rebuilt from a stored lap answers like the live one', () => {
+	const trace = LapTrace.fromArrays(
+		3,
+		new Float32Array([0, 2, 4, 4]),
+		new Float32Array([0, 100, 200, 250]),
+	);
+	assert.equal(trace.lap, 3);
+	assert.equal(trace.length, 3);
+	assert.equal(timeAtDistance(trace, 3), 150);
+});

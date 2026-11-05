@@ -5,6 +5,7 @@ const { salsa20Xor } = require('../dist/sources/gt7/salsa20');
 const {
 	buildGt7Plain,
 	decryptGt7,
+	decryptGt7Any,
 	encryptGt7,
 	parseGt7,
 } = require('../dist/sources/gt7/gt7Packet');
@@ -71,4 +72,35 @@ test('GT7 normalizer integrates lap distance and derives lateral G', () => {
 test('GT7 normalizer skips paused packets', () => {
 	const normalizer = new Gt7Normalizer();
 	assert.equal(normalizer.push(parseGt7(buildGt7Plain({ isPaused: true })), 0), null);
+});
+
+test('GT7 packet B carries wheels, suspension, engine temps and steering', () => {
+	const plain = buildGt7Plain(
+		{
+			speedMs: 40,
+			wheelRps: [100, 100, 125, -125],
+			tyreRadius: [0.32, 0.32, 0.34, 0.34],
+			suspensionHeight: [0.06, 0.061, 0.07, 0.071],
+			waterTemp: 91,
+			oilTemp: 104,
+			wheelRotation: Math.PI / 8,
+		},
+		'B',
+	);
+	const packet = parseGt7(decryptGt7Any(encryptGt7(plain, 99, 'B')));
+	assert.ok(Math.abs(packet.wheelRotation - Math.PI / 8) < 1e-6);
+	assert.equal(parseGt7(buildGt7Plain({})).wheelRotation, null);
+
+	const frame = new Gt7Normalizer().push(packet, 1000);
+	// |rad/s| × radius → km/h: 100 × 0.32 × 3.6 = 115.2, 125 × 0.34 × 3.6 = 153.
+	assert.ok(Math.abs(frame.wheelSpeeds[0] - 115.2) < 1e-3);
+	assert.ok(Math.abs(frame.wheelSpeeds[3] - 153) < 1e-3);
+	assert.ok(Math.abs(frame.suspension[2] - 0.07) < 1e-6);
+	assert.ok(Math.abs(frame.waterTemp - 91) < 1e-6);
+	assert.ok(Math.abs(frame.steer + 0.5) < 1e-6);
+});
+
+test('GT7 decryptAny falls back to A for short packets', () => {
+	const encrypted = encryptGt7(buildGt7Plain({ packetId: 5 }), 3, 'A');
+	assert.equal(parseGt7(decryptGt7Any(encrypted)).packetId, 5);
 });
