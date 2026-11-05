@@ -3,6 +3,7 @@ import {
 	TSourceOptions,
 	TTelemetryFrame,
 	TTyreZones,
+	TWeatherSample,
 	TWheelTuple,
 } from '@racing/shared';
 
@@ -12,6 +13,9 @@ import { buildMockTrack, estimateLapTimeS, sampleAt, TMockTrack } from './mockTr
 
 const G = 9.81;
 const TICK_HZ = 60;
+/** The demo sends a weather reading this often (session clock), ms. */
+const WEATHER_EVERY_MS = 20000;
+
 const GEAR_UPSHIFT_KMH = [0, 80, 118, 152, 186, 218, 248];
 
 const OPPONENTS = [
@@ -62,6 +66,25 @@ interface TMockState {
 }
 
 /**
+ * Made-up afternoon: the sun keeps heating the asphalt for the first half hour, then a light
+ * breeze turns. Smooth on purpose so the weather chart has a trend to show.
+ */
+export const mockWeatherAt = (t: number): TWeatherSample => {
+	const minutes = t / 60000;
+	const heating = 1 - Math.exp(-minutes / 15);
+	return {
+		t: Math.round(t),
+		airTempC: Number((24 + 2 * heating).toFixed(1)),
+		trackTempC: Number((33 + 9 * heating).toFixed(1)),
+		humidity: Math.round(48 - 6 * heating),
+		pressureHpa: 1013,
+		isRaining: false,
+		windSpeedMs: Number((2.5 + Math.sin(minutes / 4)).toFixed(1)),
+		windDirectionDeg: Math.round((220 + minutes * 3) % 360),
+	};
+};
+
+/**
  * Synthetic data source: a fictional circuit driven with a physically plausible speed profile,
  * plus a field of opponents for strategy features. Works without any game.
  */
@@ -72,6 +95,7 @@ export class MockSource implements TTelemetrySource {
 	private readonly rate: number;
 	private timer: NodeJS.Timeout | null = null;
 	private ticks = 0;
+	private lastWeatherT = 0;
 	private state: TMockState;
 
 	constructor(
@@ -104,9 +128,11 @@ export class MockSource implements TTelemetrySource {
 				hasWheelSpeeds: true,
 				hasSuspension: true,
 				hasEngineTemps: true,
+				hasWeather: true,
 			},
 		});
 		this.sink.status('streaming', null);
+		this.sink.weather(mockWeatherAt(0));
 		this.timer = setInterval(() => this.tick(), 1000 / TICK_HZ);
 	}
 
@@ -164,7 +190,12 @@ export class MockSource implements TTelemetrySource {
 			gear,
 			throttle,
 			brake,
-			steer: clamp(-curvature / 0.03, -1, 1),
+			// A little understeer above 0.8 G so the setup advisor has something to find.
+			steer: clamp(
+				(-curvature / 0.03) * (1 + 0.35 * Math.max(0, Math.abs(gLat) - 0.8)),
+				-1,
+				1,
+			),
 			gLat,
 			gLong: s.gLong,
 			x: this.track.x[index],
@@ -214,6 +245,13 @@ export class MockSource implements TTelemetrySource {
 		if (lap) this.sink.lap({ ...lap, compound: 'Medium' });
 		this.ticks += 1;
 		if (this.ticks % (TICK_HZ / 2) === 0) this.sink.field(this.buildField());
+		if (
+			Math.floor(frame.t / WEATHER_EVERY_MS) !==
+			Math.floor(this.lastWeatherT / WEATHER_EVERY_MS)
+		) {
+			this.sink.weather(mockWeatherAt(frame.t));
+		}
+		this.lastWeatherT = frame.t;
 	}
 
 	private initialState(): TMockState {

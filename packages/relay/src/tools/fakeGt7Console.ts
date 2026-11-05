@@ -13,7 +13,7 @@ import { MockSource } from '../sources/mock/mockSource';
  */
 const noop = (): void => undefined;
 const mock = new MockSource(
-	{ session: noop, frame: noop, lap: noop, field: noop, status: noop },
+	{ session: noop, frame: noop, lap: noop, field: noop, weather: noop, status: noop },
 	{},
 );
 const socket = dgram.createSocket('udp4');

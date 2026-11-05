@@ -4,6 +4,7 @@ import {
 	TSessionInfo,
 	TSourceKind,
 	TTelemetryFrame,
+	TWeatherSample,
 } from './telemetryTypings';
 
 export interface TSourceOptions {
@@ -33,7 +34,8 @@ export type TServerMessage =
 	| { type: 'session'; session: TSessionInfo }
 	| { type: 'frame'; frame: TTelemetryFrame }
 	| { type: 'lap'; lap: TLapSummary }
-	| { type: 'field'; entries: TFieldEntry[] };
+	| { type: 'field'; entries: TFieldEntry[] }
+	| { type: 'weather'; weather: TWeatherSample };
 
 export type TClientMessage =
 	| { type: 'selectSource'; source: TSourceKind; options?: TSourceOptions }

@@ -1,6 +1,12 @@
-import { TFieldEntry, TLapSummary, TTelemetryFrame } from '@racing/shared';
+import { TFieldEntry, TLapSummary, TTelemetryFrame, TWeatherSample } from '@racing/shared';
 
-import { TOf1Interval, TOf1Position, TOf1SessionBundle, TOf1Stint } from './openf1Typings';
+import {
+	TOf1Interval,
+	TOf1Position,
+	TOf1SessionBundle,
+	TOf1Stint,
+	TOf1Weather,
+} from './openf1Typings';
 
 const G = 9.81;
 /** OpenF1 location units are ~1/10 m. */
@@ -95,6 +101,8 @@ export class OpenF1Timeline {
 	private readonly locY: Float64Array;
 	private readonly intervals: Map<number, TDriverSeries<TOf1Interval>>;
 	private readonly positions: Map<number, TDriverSeries<TOf1Position>>;
+	private readonly weatherRows: TOf1Weather[];
+	private readonly weatherTimes: Float64Array;
 
 	constructor(private readonly bundle: TOf1SessionBundle) {
 		const car = [...bundle.carData].sort((a, b) => toMs(a.date) - toMs(b.date));
@@ -123,6 +131,8 @@ export class OpenF1Timeline {
 		this.intervals = seriesByDriver(bundle.intervals);
 		this.positions = seriesByDriver(bundle.positions);
 		this.laps = this.buildLapWindows();
+		this.weatherRows = [...(bundle.weather ?? [])].sort((a, b) => toMs(a.date) - toMs(b.date));
+		this.weatherTimes = Float64Array.from(this.weatherRows.map(r => toMs(r.date)));
 
 		this.startMs = this.laps[0]?.startMs ?? this.carTimes[0];
 		this.endMs = this.carTimes[this.carTimes.length - 1];
@@ -166,6 +176,35 @@ export class OpenF1Timeline {
 	/** Laps that finished in (fromMs, toMs]. */
 	lapsFinishedBetween(fromMs: number, toMs: number): TLapSummary[] {
 		return this.laps.filter(l => l.endMs > fromMs && l.endMs <= toMs).map(l => l.summary);
+	}
+
+	get hasWeather(): boolean {
+		return this.weatherRows.length > 0;
+	}
+
+	/** Index of the weather row in force at `t` (-1 when there is none), to detect a new one. */
+	weatherIndexAt(t: number): number {
+		if (this.weatherRows.length === 0) return -1;
+		// Before the first row, the first reading is the best guess.
+		return Math.max(0, lastAtOrBefore(this.weatherTimes, t));
+	}
+
+	/** Conditions at `t`: the latest OpenF1 reading, not interpolated (rows are a minute apart). */
+	weatherAt(t: number): TWeatherSample | null {
+		const index = this.weatherIndexAt(t);
+		if (index < 0) return null;
+		const row = this.weatherRows[index];
+		const finite = (value: number): number | null => (Number.isFinite(value) ? value : null);
+		return {
+			t: Math.round(t - this.startMs),
+			airTempC: row.air_temperature,
+			trackTempC: row.track_temperature,
+			humidity: finite(row.humidity),
+			pressureHpa: finite(row.pressure),
+			isRaining: row.rainfall > 0,
+			windSpeedMs: finite(row.wind_speed),
+			windDirectionDeg: finite(row.wind_direction),
+		};
 	}
 
 	fieldAt(t: number): TFieldEntry[] {

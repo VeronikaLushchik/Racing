@@ -82,6 +82,25 @@ export interface TOf1Pit {
 	pit_duration: number | null;
 }
 
+/** Track conditions, about one row per minute for the whole session. */
+export interface TOf1Weather {
+	date: string;
+	/** °C */
+	air_temperature: number;
+	/** °C */
+	track_temperature: number;
+	/** % */
+	humidity: number;
+	/** mbar (= hPa) */
+	pressure: number;
+	/** 0 dry, 1 raining. */
+	rainfall: number;
+	/** Degrees, where the wind comes from. */
+	wind_direction: number;
+	/** m/s */
+	wind_speed: number;
+}
+
 export interface TOf1SessionBundle {
 	session: TOf1Session;
 	drivers: TOf1Driver[];
@@ -93,4 +112,6 @@ export interface TOf1SessionBundle {
 	intervals: TOf1Interval[];
 	positions: TOf1Position[];
 	pits: TOf1Pit[];
+	/** Empty when OpenF1 has no weather for the session or it could not be fetched. */
+	weather?: TOf1Weather[];
 }

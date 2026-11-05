@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
-import { TOf1SessionBundle } from './openf1Typings';
+import { TOf1SessionBundle, TOf1Weather } from './openf1Typings';
 
 const OPENF1_URL = 'https://api.openf1.org/v1';
 const MIN_REQUEST_GAP_MS = 400;
@@ -52,6 +52,8 @@ export class OpenF1Client {
 			intervals: await this.get('intervals', bySession),
 			positions: await this.get('position', bySession),
 			pits: await this.get('pit', bySession),
+			// Weather is a nice-to-have: a race cached before weather was added still plays.
+			weather: await this.get<TOf1Weather>('weather', bySession).catch(() => []),
 		};
 	}
 

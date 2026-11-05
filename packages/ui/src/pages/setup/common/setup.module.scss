@@ -1,0 +1,185 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+.setup_page {
+	@include flex-list;
+	gap: 16px;
+}
+
+.columns {
+	display: grid;
+	grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+	align-items: start;
+	gap: 16px;
+
+	@media all and (max-width: $tabletBreakpoint) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.stack {
+	@include flex-list;
+	gap: 16px;
+}
+
+.phases {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.phase {
+	@include flex-list;
+	gap: 4px;
+
+	padding: 12px 16px;
+
+	@extend %card;
+
+	&[data-balance='understeer'] .phase_value {
+		color: $temperature_cold;
+	}
+
+	&[data-balance='oversteer'] .phase_value {
+		color: $system_dangerous;
+	}
+
+	&[data-balance='neutral'] .phase_value {
+		color: $system_success;
+	}
+}
+
+.phase_label,
+.muted {
+	margin: 0;
+
+	color: $text_secondary;
+	@extend %font-body-sm;
+}
+
+.phase_value {
+	@extend %font-numeric-lg;
+}
+
+.advice_list {
+	@include flex-list;
+	gap: 12px;
+
+	margin: 0;
+	padding: 0;
+
+	list-style: none;
+}
+
+.advice {
+	@include flex-list;
+	gap: 6px;
+
+	padding: 12px 16px;
+
+	border-inline-start: 3px solid $stroke_active;
+	@extend %card;
+
+	&[data-confidence='low'] {
+		border-inline-start-color: $text_disabled;
+	}
+
+	&[data-confidence='high'] {
+		border-inline-start-color: $system_warning;
+	}
+}
+
+.advice_header {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.advice_title {
+	margin: 0;
+
+	color: $text_primary;
+	@extend %font-label-md;
+}
+
+.badge {
+	flex: none;
+
+	color: $text_secondary;
+	@extend %font-label-sm;
+}
+
+.text {
+	margin: 0;
+
+	color: $text_primary;
+	@extend %font-body-md;
+}
+
+.change {
+	margin: 0;
+
+	color: $text_active;
+	@extend %font-numeric-sm;
+
+	&[data-is-alternative='true'] {
+		color: $text_secondary;
+	}
+}
+
+.empty_text {
+	margin: 0;
+
+	color: $text_secondary;
+}
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 12px;
+
+	label {
+		min-width: 200px;
+	}
+}
+
+.sheet_grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	align-items: start;
+	gap: 16px;
+
+	@media all and (max-width: $tabletBreakpoint) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+
+	th {
+		color: $text_secondary;
+		text-align: start;
+		@extend %font-label-md;
+	}
+
+	th,
+	td {
+		padding: 6px 8px 6px 0;
+	}
+
+	input {
+		width: 100%;
+		@extend %native-input;
+	}
+}
+
+.unit {
+	color: $text_disabled;
+	@extend %font-label-sm;
+}

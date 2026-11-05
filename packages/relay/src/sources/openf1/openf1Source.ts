@@ -58,6 +58,7 @@ export class OpenF1Source implements TTelemetrySource {
 					hasSectors: true,
 					hasOpponents: true,
 					hasMeasuredG: false,
+					hasWeather: timeline.hasWeather,
 				},
 			});
 		} catch (error) {
@@ -69,6 +70,7 @@ export class OpenF1Source implements TTelemetrySource {
 		const rate = Math.min(16, Math.max(0.25, this.options.rate ?? 1));
 		let t = timeline.startMs;
 		let ticks = 0;
+		let weatherIndex = -1;
 		this.timer = setInterval(() => {
 			const next = t + TICK_MS * rate;
 			if (next > timeline.endMs) {
@@ -81,6 +83,12 @@ export class OpenF1Source implements TTelemetrySource {
 			this.sink.frame(timeline.frameAt(t));
 			ticks += 1;
 			if (ticks % FIELD_EVERY_TICKS === 0) this.sink.field(timeline.fieldAt(t));
+			const nextWeatherIndex = timeline.weatherIndexAt(t);
+			if (nextWeatherIndex !== weatherIndex) {
+				weatherIndex = nextWeatherIndex;
+				const weather = timeline.weatherAt(t);
+				if (weather) this.sink.weather(weather);
+			}
 		}, TICK_MS);
 	}
 

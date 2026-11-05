@@ -98,6 +98,31 @@ export interface TSourceCapabilities {
 	hasWheelSpeeds?: boolean;
 	hasSuspension?: boolean;
 	hasEngineTemps?: boolean;
+	/** The source reports weather (`weather` messages). GT7 does not: the driver enters it. */
+	hasWeather?: boolean;
+}
+
+/**
+ * Track conditions at one moment. OpenF1 reports them about once a minute; the demo source
+ * makes them up; GT7 has none, so the UI asks the driver instead.
+ */
+export interface TWeatherSample {
+	/** Session clock, ms (same clock as `TTelemetryFrame.t`). */
+	t: number;
+	/** °C */
+	airTempC: number;
+	/** °C */
+	trackTempC: number;
+	/** Relative humidity, %. */
+	humidity: number | null;
+	/** Air pressure, hPa. */
+	pressureHpa: number | null;
+	/** Rain is falling. */
+	isRaining: boolean;
+	/** m/s */
+	windSpeedMs: number | null;
+	/** Direction the wind comes from, degrees (0 = north). */
+	windDirectionDeg: number | null;
 }
 
 export interface TSessionInfo {
