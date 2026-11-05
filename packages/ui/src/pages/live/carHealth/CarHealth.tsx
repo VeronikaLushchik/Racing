@@ -1,9 +1,11 @@
 import React, { FC } from 'react';
 
 import Panel from '~@ui/Panel/Panel';
+import CarProfileToggle from 'src/modules/carProfile/CarProfileToggle';
 
 import useTranslation from '~@engines/translations/useTranslation';
 import { useLatestFrame, useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
+import { useCarProfile } from 'src/modules/carProfile/carProfile';
 import { slipRatio, slipState, temperatureState } from './carHealthFunctions';
 
 import {
@@ -12,7 +14,6 @@ import {
 	OIL_WINDOW_C,
 	SLIP_COLOR_STATE,
 	SLIP_LABEL,
-	TYRE_WINDOW_C,
 	WATER_WINDOW_C,
 	WHEELS,
 } from './carHealthConstants';
@@ -25,6 +26,7 @@ const CarHealth: FC = () => {
 	const frame = useLatestFrame(CAR_HEALTH_HZ);
 
 	const capabilities = session?.capabilities;
+	const tyreWindow = useCarProfile().tyreWindowC;
 	const hasChassis = Boolean(capabilities?.hasWheelSpeeds || capabilities?.hasSuspension);
 	const engineTemps = [
 		{ key: 'water', value: frame?.waterTemp ?? null, window: WATER_WINDOW_C },
@@ -35,6 +37,7 @@ const CarHealth: FC = () => {
 		<div className={classes.car_health}>
 			<Panel
 				title={t('car.tyres')}
+				actions={<CarProfileToggle />}
 				subtitle={
 					capabilities && !capabilities.hasTyreZones
 						? t('car.zonesUnavailable')
@@ -73,7 +76,7 @@ const CarHealth: FC = () => {
 														? undefined
 														: temperatureState(
 																Math.round(cell.value),
-																TYRE_WINDOW_C,
+																tyreWindow,
 															)
 												}
 												title={`${cell.key}: ${cell.value.toFixed(1)} °C`}
@@ -96,7 +99,7 @@ const CarHealth: FC = () => {
 				<p className={classes.legend}>
 					<span data-temp-state="cold">{t('car.cold')}</span>
 					<span data-temp-state="optimal">
-						{t('car.optimal')} {TYRE_WINDOW_C.min}–{TYRE_WINDOW_C.max} °C
+						{t('car.optimal')} {tyreWindow.min}–{tyreWindow.max} °C
 					</span>
 					<span data-temp-state="hot">{t('car.hot')}</span>
 				</p>

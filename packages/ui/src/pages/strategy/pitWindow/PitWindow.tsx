@@ -1,16 +1,12 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 
 import Field from '~@ui/Field/Field';
 import Panel from '~@ui/Panel/Panel';
 import PitRibbon from './PitRibbon';
 
 import useTranslation from '~@engines/translations/useTranslation';
-import {
-	DEFAULT_PIT_LOSS_S,
-	predictRejoin,
-	undercutGain,
-	undercutTarget,
-} from '~@engines/racingMath/pitWindowModel';
+import { predictRejoin, undercutGain, undercutTarget } from '~@engines/racingMath/pitWindowModel';
+import { useCarProfile } from 'src/modules/carProfile/carProfile';
 import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
 import useDegradation from '../common/useDegradation';
 import { formatSigned } from '../common/strategyFunctions';
@@ -25,8 +21,12 @@ const PitWindow: FC = () => {
 	const { field, session } = useTelemetryMeta();
 	const degradation = useDegradation();
 
-	const [pitLossS, setPitLossS] = useState<number>(DEFAULT_PIT_LOSS_S);
+	const profile = useCarProfile();
+	const [pitLossS, setPitLossS] = useState<number>(profile.pitLossS);
 	const [delayLaps, setDelayLaps] = useState<number>(3);
+
+	// A different car class brings its own pit-lane time; the field stays editable.
+	useEffect(() => setPitLossS(profile.pitLossS), [profile.pitLossS]);
 
 	const hasOpponents = (session?.capabilities.hasOpponents ?? false) && field.length > 1;
 	const player = field.find(entry => entry.isPlayer);
@@ -39,11 +39,11 @@ const PitWindow: FC = () => {
 	const tyreAge = player?.tyreAgeLaps ?? stint?.[stint.length - 1].tyreAge ?? null;
 	const gain =
 		degradation && tyreAge !== null
-			? undercutGain(degradation.degradationS, tyreAge, delayLaps)
+			? undercutGain(degradation.degradationS, tyreAge, delayLaps, profile.warmUpLossS)
 			: null;
 	const target =
 		degradation && tyreAge !== null && hasOpponents
-			? undercutTarget(field, degradation.degradationS, tyreAge)
+			? undercutTarget(field, degradation.degradationS, tyreAge, profile.warmUpLossS)
 			: null;
 
 	const neighbourText = (gapS: number | undefined) =>

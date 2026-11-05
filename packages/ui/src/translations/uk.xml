@@ -65,6 +65,10 @@
 	<entry key="car.fr">ПП</entry>
 	<entry key="car.rl">ЗЛ</entry>
 	<entry key="car.rr">ЗП</entry>
+	<entry key="carProfile.label">Клас машини</entry>
+	<entry key="carProfile.gt3">GT3</entry>
+	<entry key="carProfile.f1">F1</entry>
+	<entry key="carProfile.road">Дорожня</entry>
 	<entry key="car.chassis">Колеса і підвіска</entry>
 	<entry key="car.chassisHint">Прослизання: швидкість колеса проти швидкості машини. Блокування мінус, пробуксовка плюс.</entry>
 	<entry key="car.slipLock">блокування</entry>
@@ -154,7 +158,7 @@
 	<entry key="degradation.fuelPerLap">Паливо за коло</entry>
 	<entry key="degradation.fuelHint">Кожен літр коштує близько 0,03 с</entry>
 	<entry key="degradation.chart">Час кіл і прогноз</entry>
-	<entry key="degradation.chartHint">Точки: кола цього стинту. Пунктир: тренд. Помаранчеве: наступні кола, крапкові лінії: діапазон 95%.</entry>
+	<entry key="degradation.chartHint">Точки: кола цього стинту. Пунктир: тренд. Помаранчеве: наступні кола, крапкові лінії: діапазон 95%. Вплив палива {0} с на літр.</entry>
 	<entry key="degradation.lapTime">Час кола</entry>
 	<entry key="degradation.trend">Тренд</entry>
 	<entry key="degradation.forecast">Прогноз</entry>
