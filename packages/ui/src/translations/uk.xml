@@ -103,7 +103,7 @@
 	<entry key="analysis.best">найкраще</entry>
 	<entry key="analysis.lapOption">Коло {0} · {1}</entry>
 	<entry key="analysis.lapShort">Коло {0}</entry>
-	<entry key="analysis.recordingHint">Кола записуються в цій вкладці браузера, поки дашборд відкритий. Щоб спробувати, запустіть демо-трасу на сторінці «Джерело даних».</entry>
+	<entry key="analysis.recordingHint">Кола записуються, поки дашборд відкритий, і зберігаються в цьому браузері після перезавантаження. Щоб спробувати, запустіть демо-трасу на сторінці «Джерело даних».</entry>
 	<entry key="ghost.title">Коло-привид</entry>
 	<entry key="ghost.needLaps">Проїдьте щонайменше два кола, щоб їх порівняти.</entry>
 	<entry key="ghost.reference">Еталонне коло</entry>

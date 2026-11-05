@@ -103,7 +103,7 @@
 	<entry key="analysis.best">best</entry>
 	<entry key="analysis.lapOption">Lap {0} · {1}</entry>
 	<entry key="analysis.lapShort">Lap {0}</entry>
-	<entry key="analysis.recordingHint">Laps are recorded in this browser tab while the dashboard is open. To try it, start the demo circuit on the Data source page.</entry>
+	<entry key="analysis.recordingHint">Laps are recorded while the dashboard is open and kept in this browser after a reload. To try it, start the demo circuit on the Data source page.</entry>
 	<entry key="ghost.title">Ghost lap</entry>
 	<entry key="ghost.needLaps">Complete at least two laps to compare them.</entry>
 	<entry key="ghost.reference">Reference lap</entry>
