@@ -65,6 +65,15 @@
 	<entry key="car.fr">FR</entry>
 	<entry key="car.rl">RL</entry>
 	<entry key="car.rr">RR</entry>
+	<entry key="car.chassis">Wheels and suspension</entry>
+	<entry key="car.chassisHint">Slip: wheel speed against car speed. Locking is negative, wheelspin positive.</entry>
+	<entry key="car.slipLock">locking</entry>
+	<entry key="car.slipGrip">grip</entry>
+	<entry key="car.slipSpin">wheelspin</entry>
+	<entry key="car.rideHeight">Ride height</entry>
+	<entry key="car.engine">Engine</entry>
+	<entry key="car.water">Coolant</entry>
+	<entry key="car.oil">Oil</entry>
 	<entry key="timing.currentLap">Current lap</entry>
 	<entry key="timing.lastLap">Last lap</entry>
 	<entry key="timing.bestLap">Best lap</entry>

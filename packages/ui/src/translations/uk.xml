@@ -65,6 +65,15 @@
 	<entry key="car.fr">ПП</entry>
 	<entry key="car.rl">ЗЛ</entry>
 	<entry key="car.rr">ЗП</entry>
+	<entry key="car.chassis">Колеса і підвіска</entry>
+	<entry key="car.chassisHint">Прослизання: швидкість колеса проти швидкості машини. Блокування мінус, пробуксовка плюс.</entry>
+	<entry key="car.slipLock">блокування</entry>
+	<entry key="car.slipGrip">зчеплення</entry>
+	<entry key="car.slipSpin">пробуксовка</entry>
+	<entry key="car.rideHeight">Висота підвіски</entry>
+	<entry key="car.engine">Двигун</entry>
+	<entry key="car.water">Охолоджувальна рідина</entry>
+	<entry key="car.oil">Масло</entry>
 	<entry key="timing.currentLap">Поточне коло</entry>
 	<entry key="timing.lastLap">Останнє коло</entry>
 	<entry key="timing.bestLap">Найкраще коло</entry>

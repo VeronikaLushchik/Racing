@@ -4,9 +4,18 @@ import Panel from '~@ui/Panel/Panel';
 
 import useTranslation from '~@engines/translations/useTranslation';
 import { useLatestFrame, useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
-import { temperatureState } from './carHealthFunctions';
+import { slipRatio, slipState, temperatureState } from './carHealthFunctions';
 
-import { BRAKE_WINDOW_C, CAR_HEALTH_HZ, TYRE_WINDOW_C, WHEELS } from './carHealthConstants';
+import {
+	BRAKE_WINDOW_C,
+	CAR_HEALTH_HZ,
+	OIL_WINDOW_C,
+	SLIP_COLOR_STATE,
+	SLIP_LABEL,
+	TYRE_WINDOW_C,
+	WATER_WINDOW_C,
+	WHEELS,
+} from './carHealthConstants';
 
 import classes from './carHealth.module.scss';
 
@@ -16,6 +25,11 @@ const CarHealth: FC = () => {
 	const frame = useLatestFrame(CAR_HEALTH_HZ);
 
 	const capabilities = session?.capabilities;
+	const hasChassis = Boolean(capabilities?.hasWheelSpeeds || capabilities?.hasSuspension);
+	const engineTemps = [
+		{ key: 'water', value: frame?.waterTemp ?? null, window: WATER_WINDOW_C },
+		{ key: 'oil', value: frame?.oilTemp ?? null, window: OIL_WINDOW_C },
+	] as const;
 
 	return (
 		<div className={classes.car_health}>
@@ -121,6 +135,71 @@ const CarHealth: FC = () => {
 					<span className={classes.big_value}>
 						{frame?.fuel != null ? frame.fuel.toFixed(1) : '—'} L
 					</span>
+				)}
+			</Panel>
+			<Panel
+				title={t('car.chassis')}
+				subtitle={hasChassis ? t('car.chassisHint') : undefined}
+			>
+				{!hasChassis ? (
+					<p className={classes.empty_text}>{t('common.notAvailable')}</p>
+				) : (
+					<div className={classes.brakes}>
+						{WHEELS.map((wheel, index) => {
+							const wheelKmh = frame?.wheelSpeeds?.[index] ?? null;
+							const ratio =
+								wheelKmh === null || !frame
+									? null
+									: slipRatio(wheelKmh, frame.speed);
+							const state = slipState(ratio);
+							const height = frame?.suspension?.[index] ?? null;
+							return (
+								<div
+									key={wheel}
+									className={classes.brake}
+									data-slip-state={state}
+									data-temp-state={
+										wheelKmh === null ? undefined : SLIP_COLOR_STATE[state]
+									}
+								>
+									<span className={classes.wheel_label}>
+										{t(`car.${wheel}`)} · {t(SLIP_LABEL[state])}
+									</span>
+									<span className={classes.big_value}>
+										{ratio === null ? '—' : `${Math.round(ratio * 100)}%`}
+									</span>
+									<span className={classes.tyre_wear}>
+										{t('car.rideHeight')}{' '}
+										{height === null ? '—' : `${Math.round(height * 1000)} mm`}
+									</span>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</Panel>
+			<Panel title={t('car.engine')}>
+				{!capabilities?.hasEngineTemps ? (
+					<p className={classes.empty_text}>{t('common.notAvailable')}</p>
+				) : (
+					<div className={classes.brakes}>
+						{engineTemps.map(item => (
+							<div
+								key={item.key}
+								className={classes.brake}
+								data-temp-state={
+									item.value === null
+										? undefined
+										: temperatureState(Math.round(item.value), item.window)
+								}
+							>
+								<span className={classes.wheel_label}>{t(`car.${item.key}`)}</span>
+								<span className={classes.big_value}>
+									{item.value === null ? '—' : Math.round(item.value)} °C
+								</span>
+							</div>
+						))}
+					</div>
 				)}
 			</Panel>
 		</div>

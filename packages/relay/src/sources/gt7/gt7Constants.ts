@@ -32,10 +32,15 @@ export const GT7_OFFSETS = {
 	angularVelocityX: 0x2c,
 	angularVelocityY: 0x30,
 	angularVelocityZ: 0x34,
+	bodyHeight: 0x38,
 	engineRpm: 0x3c,
 	fuelLevel: 0x44,
 	fuelCapacity: 0x48,
 	speedMs: 0x4c,
+	turboBoost: 0x50,
+	oilPressure: 0x54,
+	waterTemp: 0x58,
+	oilTemp: 0x5c,
 	tyreTempFL: 0x60,
 	tyreTempFR: 0x64,
 	tyreTempRL: 0x68,
@@ -52,7 +57,14 @@ export const GT7_OFFSETS = {
 	gears: 0x90,
 	throttle: 0x91,
 	brake: 0x92,
+	/** Four floats each, wheel order FL, FR, RL, RR. */
+	wheelRps: 0xa4,
+	tyreRadius: 0xb4,
+	suspensionHeight: 0xc4,
+	clutchPedal: 0xf4,
 	carCode: 0x124,
+	/** Packet B and later: steering wheel angle, radians. */
+	wheelRotation: 0x128,
 } as const;
 
 /** Bits of the `flags` field. */

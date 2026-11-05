@@ -48,6 +48,14 @@ export interface TTelemetryFrame {
 	/** Litres. */
 	fuel: number | null;
 	position: number | null;
+	/** Road speed of each wheel, km/h. Above the car speed: wheelspin; below: locking. */
+	wheelSpeeds?: TWheelTuple<number> | null;
+	/** Suspension height of each wheel, m (smaller = more compressed). */
+	suspension?: TWheelTuple<number> | null;
+	/** Coolant temperature, °C. */
+	waterTemp?: number | null;
+	/** Engine oil temperature, °C. */
+	oilTemp?: number | null;
 }
 
 export interface TLapSummary {
@@ -87,6 +95,9 @@ export interface TSourceCapabilities {
 	hasOpponents: boolean;
 	/** Real G-sensor data; false when G is derived from speed/yaw. */
 	hasMeasuredG: boolean;
+	hasWheelSpeeds?: boolean;
+	hasSuspension?: boolean;
+	hasEngineTemps?: boolean;
 }
 
 export interface TSessionInfo {

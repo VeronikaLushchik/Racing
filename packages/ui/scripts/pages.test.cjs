@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 
 const base = '../.test-dist/ui/src/pages/live';
 const { classifyLaps } = require(`${base}/timing/timingFunctions`);
-const { temperatureState } = require(`${base}/carHealth/carHealthFunctions`);
+const { temperatureState, slipRatio, slipState } = require(`${base}/carHealth/carHealthFunctions`);
 const { ggAxisLimit, isTrailBraking } = require(`${base}/driverTelemetry/driverTelemetryFunctions`);
 
 const lap = (n, time, sectors, extra = {}) => ({
@@ -45,4 +45,13 @@ test('driver helpers', () => {
 	assert.equal(ggAxisLimit(3.95), 5);
 	assert.equal(isTrailBraking(0.3, 1.2), true);
 	assert.equal(isTrailBraking(0.3, 0.1), false);
+});
+
+test('slip ratio flags locking and wheelspin, ignores crawling speeds', () => {
+	assert.equal(slipRatio(90, 100), -0.1);
+	assert.equal(slipState(slipRatio(90, 100)), 'lock');
+	assert.equal(slipState(slipRatio(108, 100)), 'spin');
+	assert.equal(slipState(slipRatio(101, 100)), 'grip');
+	assert.equal(slipRatio(5, 10), null);
+	assert.equal(slipState(null), 'grip');
 });
