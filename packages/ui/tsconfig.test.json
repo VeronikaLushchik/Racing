@@ -22,6 +22,7 @@
 		"src/engines/racingMath/tyreDegradationModel.ts",
 		"src/engines/racingMath/pitWindowModel.ts",
 		"src/engines/racingMath/trackOutlineModel.ts",
-		"src/engines/racingMath/carProfiles.ts"
+		"src/engines/racingMath/carProfiles.ts",
+		"src/engines/racingMath/weatherModel.ts"
 	]
 }

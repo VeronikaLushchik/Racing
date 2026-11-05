@@ -7,6 +7,7 @@ import {
 	TSourceDescriptor,
 	TSourceKind,
 	TTelemetryFrame,
+	TWeatherSample,
 } from '@racing/shared';
 
 import { computeDelta, LapTrace } from '~@engines/racingMath/deltaModel';
@@ -20,6 +21,8 @@ import { TLapRecord } from './lapTypings';
 const BUFFER_SECONDS = 120;
 const BUFFER_HZ = 60;
 const MAX_LAP_RECORDS = 80;
+/** About two hours of OpenF1 readings (one a minute), or 40 minutes of the demo. */
+const MAX_WEATHER_SAMPLES = 120;
 
 export type TConnectionState = 'connecting' | 'open' | 'closed';
 
@@ -36,6 +39,8 @@ export interface TTelemetryMeta {
 	lapRecords: TLapRecord[];
 	field: TFieldEntry[];
 	bestLapMs: number | null;
+	/** Readings the source sent for this session, oldest first. Empty for GT7. */
+	weather: TWeatherSample[];
 }
 
 const initialMeta: TTelemetryMeta = {
@@ -49,6 +54,7 @@ const initialMeta: TTelemetryMeta = {
 	lapRecords: [],
 	field: [],
 	bestLapMs: null,
+	weather: [],
 };
 
 type TListener = () => void;
@@ -113,6 +119,14 @@ export class TelemetryStore {
 			case 'field':
 				this.updateMeta({ field: message.entries });
 				break;
+			case 'weather':
+				this.updateMeta({
+					weather: [
+						...this.meta.weather.filter(sample => sample.t < message.weather.t),
+						message.weather,
+					].slice(-MAX_WEATHER_SAMPLES),
+				});
+				break;
 			default:
 				break;
 		}
@@ -127,7 +141,14 @@ export class TelemetryStore {
 			this.previousTrace = null;
 			this.referenceTrace = null;
 			this.lapRecorders.clear();
-			this.updateMeta({ session, laps: [], lapRecords: [], field: [], bestLapMs: null });
+			this.updateMeta({
+				session,
+				laps: [],
+				lapRecords: [],
+				field: [],
+				bestLapMs: null,
+				weather: [],
+			});
 			void this.restoreLaps(session.sessionId);
 		} else {
 			this.updateMeta({ session });

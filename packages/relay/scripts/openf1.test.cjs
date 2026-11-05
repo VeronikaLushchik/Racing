@@ -121,3 +121,33 @@ test('field sorts by position and ignores non-numeric gaps', () => {
 	assert.equal(field[1].tyreAgeLaps, 3);
 	assert.equal(field[1].isPlayer, true);
 });
+
+test('timeline serves the latest weather reading and works without any', () => {
+	const bundle = buildBundle();
+	assert.equal(new OpenF1Timeline(bundle).weatherAt(T0), null);
+
+	const row = (ms, extra = {}) => ({
+		date: iso(T0 + ms),
+		air_temperature: 27.4,
+		track_temperature: 44.1,
+		humidity: 41,
+		pressure: 1009.8,
+		rainfall: 0,
+		wind_direction: 210,
+		wind_speed: 1.8,
+		...extra,
+	});
+	bundle.weather = [row(30000, { track_temperature: 46, rainfall: 1 }), row(-30000)];
+	const timeline = new OpenF1Timeline(bundle);
+	assert.equal(timeline.hasWeather, true);
+	// Before the first reading the first one is used; rows are sorted by time.
+	assert.equal(timeline.weatherIndexAt(T0 - 60000), 0);
+	const early = timeline.weatherAt(T0 + 10000);
+	assert.equal(early.trackTempC, 44.1);
+	assert.equal(early.isRaining, false);
+	assert.equal(early.t, 10000);
+	const late = timeline.weatherAt(T0 + 40000);
+	assert.equal(late.trackTempC, 46);
+	assert.equal(late.isRaining, true);
+	assert.equal(late.pressureHpa, 1009.8);
+});

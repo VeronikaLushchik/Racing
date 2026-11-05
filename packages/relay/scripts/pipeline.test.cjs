@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 
 const { LapTracker } = require('../dist/pipeline/lapTracker');
 const { buildMockTrack, estimateLapTimeS } = require('../dist/sources/mock/mockTrack');
-const { MockSource } = require('../dist/sources/mock/mockSource');
+const { MockSource, mockWeatherAt } = require('../dist/sources/mock/mockSource');
 
 const frame = (lap, lapTimeMs, lapDistance) => ({ lap, lapTimeMs, lapDistance });
 
@@ -39,7 +39,7 @@ test('mock circuit has a plausible length and lap time', () => {
 test('mock source produces bounded channels', () => {
 	const noop = () => undefined;
 	const mock = new MockSource(
-		{ session: noop, frame: noop, lap: noop, field: noop, status: noop },
+		{ session: noop, frame: noop, lap: noop, field: noop, weather: noop, status: noop },
 		{},
 	);
 	for (let i = 0; i < 60 * 90; i += 1) {
@@ -49,4 +49,13 @@ test('mock source produces bounded channels', () => {
 		assert.ok(Math.abs(f.gLat) < 3, `gLat ${f.gLat}`);
 		assert.ok(f.speed >= 0 && f.speed < 320);
 	}
+});
+
+test('mock weather warms the track and stays plausible', () => {
+	const start = mockWeatherAt(0);
+	const later = mockWeatherAt(30 * 60000);
+	assert.ok(later.trackTempC > start.trackTempC + 5);
+	assert.ok(later.trackTempC > later.airTempC);
+	assert.equal(later.isRaining, false);
+	assert.equal(later.t, 30 * 60000);
 });

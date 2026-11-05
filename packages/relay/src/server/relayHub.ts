@@ -8,6 +8,7 @@ import {
 	TSourceDescriptor,
 	TSourceKind,
 	TSourceOptions,
+	TWeatherSample,
 } from '@racing/shared';
 
 import { Recorder } from '../pipeline/recorder';
@@ -39,6 +40,7 @@ export class RelayHub {
 	private lastSession: TSessionInfo | null = null;
 	private sessionLaps: TLapSummary[] = [];
 	private lastField: TFieldEntry[] = [];
+	private lastWeather: TWeatherSample | null = null;
 	private lastStatus: TServerMessage = {
 		type: 'status',
 		state: 'idle',
@@ -63,6 +65,7 @@ export class RelayHub {
 		if (this.lastSession) messages.push({ type: 'session', session: this.lastSession });
 		this.sessionLaps.forEach(lap => messages.push({ type: 'lap', lap }));
 		if (this.lastField.length) messages.push({ type: 'field', entries: this.lastField });
+		if (this.lastWeather) messages.push({ type: 'weather', weather: this.lastWeather });
 		return messages;
 	}
 
@@ -81,6 +84,7 @@ export class RelayHub {
 		this.lastSession = null;
 		this.sessionLaps = [];
 		this.lastField = [];
+		this.lastWeather = null;
 		const sink = this.createSink(kind);
 		this.source = this.createSource(kind, sink, options);
 		sink.status('connecting', null);
@@ -123,6 +127,7 @@ export class RelayHub {
 				if (this.lastSession?.sessionId !== session.sessionId) {
 					this.sessionLaps = [];
 					this.lastField = [];
+					this.lastWeather = null;
 				}
 				this.lastSession = session;
 				if (shouldRecord && !this.recorder) {
@@ -147,6 +152,11 @@ export class RelayHub {
 				if (!isCurrent()) return;
 				this.lastField = entries;
 				this.emit({ type: 'field', entries });
+			},
+			weather: weather => {
+				if (!isCurrent()) return;
+				this.lastWeather = weather;
+				this.emit({ type: 'weather', weather });
 			},
 			status: (state, message) =>
 				isCurrent() && this.emit({ type: 'status', state, source: kind, message }),

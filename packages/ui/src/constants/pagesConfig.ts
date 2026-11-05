@@ -5,6 +5,7 @@ import DriverTelemetry from 'src/pages/live/driverTelemetry/DriverTelemetry';
 import Timing from 'src/pages/live/timing/Timing';
 import PitWindow from 'src/pages/strategy/pitWindow/PitWindow';
 import TyreDegradation from 'src/pages/strategy/tyreDegradation/TyreDegradation';
+import Weather from 'src/pages/strategy/weather/Weather';
 import SourcePage from 'src/pages/source/SourcePage';
 
 import { TPagesConfig } from 'src/typings';
@@ -77,6 +78,12 @@ export const pagesConfig: TPagesConfig = {
 				tKey: 'pagesNames.strategy.pitTab',
 				path: '/pit-window',
 				Component: PitWindow,
+			},
+			weather: {
+				title: 'Weather',
+				tKey: 'pagesNames.strategy.weatherTab',
+				path: '/weather',
+				Component: Weather,
 			},
 		},
 	},

@@ -72,6 +72,9 @@ export class ReplaySource implements TTelemetrySource {
 			case 'field':
 				this.sink.field(message.entries);
 				break;
+			case 'weather':
+				this.sink.weather(message.weather);
+				break;
 			default:
 				break;
 		}

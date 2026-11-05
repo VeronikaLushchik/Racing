@@ -5,6 +5,7 @@ import {
 	TSessionInfo,
 	TSourceOptions,
 	TTelemetryFrame,
+	TWeatherSample,
 } from '@racing/shared';
 
 /** Where a source pushes what it produces. Implemented by the relay hub. */
@@ -13,6 +14,7 @@ export interface TSourceSink {
 	frame: (frame: TTelemetryFrame) => void;
 	lap: (lap: TLapSummary) => void;
 	field: (entries: TFieldEntry[]) => void;
+	weather: (weather: TWeatherSample) => void;
 	status: (state: TRelayState, message: string | null) => void;
 }
 

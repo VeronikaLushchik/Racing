@@ -158,3 +158,23 @@
 		margin: 0;
 	}
 }
+
+.advice_list {
+	@include flex-list;
+	gap: 10px;
+
+	margin: 0;
+	padding: 0;
+
+	list-style: none;
+
+	li {
+		padding-inline-start: 12px;
+
+		border-inline-start: 3px solid $stroke_active;
+	}
+
+	li[data-tone='warning'] {
+		border-inline-start-color: $system_warning;
+	}
+}
