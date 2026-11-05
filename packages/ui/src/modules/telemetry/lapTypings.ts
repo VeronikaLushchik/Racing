@@ -23,6 +23,8 @@ export interface TLapRecord {
 	compound: string | null;
 	/** Grid step, m. */
 	step: number;
+	/** Factor the measured distance was stretched by to match the track length (1 = untouched). */
+	distanceScale: number;
 	/** Distance of each grid point, m. */
 	distance: Float32Array;
 	channels: Record<TLapChannel, Float32Array>;

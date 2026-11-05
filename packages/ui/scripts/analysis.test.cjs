@@ -2,7 +2,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const base = '../.test-dist/ui/src/engines/racingMath';
-const { buildDistanceGrid, resampleByDistance, valueAtDistance } = require(
+const {
+	buildDistanceGrid,
+	resampleByDistance,
+	valueAtDistance,
+	lapDistanceScale,
+} = require(
 	`${base}/distanceResampling`,
 );
 const { findCorners, compareLaps, describeCorner, buildDeltaSeries } = require(
@@ -138,4 +143,16 @@ test('track bounds keep metres square and sectors land on the lap', () => {
 	assert.equal(marks.length, 1);
 	assert.equal(marks[0].sector, 2);
 	assert.ok(marks[0].distance > 900 && marks[0].distance < 1100);
+});
+
+test('lap distance is stretched to the track length, tail included', () => {
+	// 990 m measured, 0.5 s left to the line at 72 km/h (20 m/s) -> 1000 m: no change.
+	const end = { lastDistance: 990, lastTimeMs: 59500, lastSpeedKmh: 72, lapTimeMs: 60000 };
+	assert.equal(lapDistanceScale(end, 1000), 1);
+	// Integrated distance came out 2% short.
+	const short = { ...end, lastDistance: 970 };
+	assert.ok(Math.abs(lapDistanceScale(short, 1000) - 1000 / 980) < 1e-9);
+	// Unknown length or a lap that is way off stays untouched.
+	assert.equal(lapDistanceScale(short, null), 1);
+	assert.equal(lapDistanceScale({ ...end, lastDistance: 700 }, 1000), 1);
 });

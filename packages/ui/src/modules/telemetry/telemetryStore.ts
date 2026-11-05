@@ -176,7 +176,9 @@ export class TelemetryStore {
 			const trace = [this.previousTrace, this.currentTrace].find(tr => tr?.lap === lap.lap);
 			if (trace && trace.length > 10) this.referenceTrace = trace;
 		}
-		const record = this.lapRecorders.get(lap.lap)?.finish(lap) ?? null;
+		const record =
+			this.lapRecorders.get(lap.lap)?.finish(lap, this.meta.session?.trackLength ?? null) ??
+			null;
 		this.lapRecorders.delete(lap.lap);
 		const lapRecords = record
 			? [...this.meta.lapRecords.filter(r => r.lap !== lap.lap), record]
