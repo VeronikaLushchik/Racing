@@ -42,6 +42,11 @@ export interface TTelemetryMeta {
 	bestLapMs: number | null;
 	/** Readings the source sent for this session, oldest first. Empty for GT7. */
 	weather: TWeatherSample[];
+	/**
+	 * When the stream stopped after laps were driven (Stop, end of a replay or recording, GT7
+	 * gone silent), ms since epoch; null while streaming. The session report offers itself then.
+	 */
+	sessionEndedAt: number | null;
 }
 
 const initialMeta: TTelemetryMeta = {
@@ -56,6 +61,7 @@ const initialMeta: TTelemetryMeta = {
 	field: [],
 	bestLapMs: null,
 	weather: [],
+	sessionEndedAt: null,
 };
 
 type TListener = () => void;
@@ -108,6 +114,7 @@ export class TelemetryStore {
 					relayState: message.state,
 					relaySource: message.source,
 					relayMessage: message.message,
+					sessionEndedAt: this.sessionEndedAt(message.state),
 				});
 				break;
 			case 'session':
@@ -135,6 +142,18 @@ export class TelemetryStore {
 		}
 	}
 
+	/** A session ends when a stream that produced laps stops; streaming again reopens it. */
+	private sessionEndedAt(state: TRelayState): number | null {
+		if (state === 'streaming') {
+			return null;
+		}
+		const wasStreaming = this.meta.relayState === 'streaming';
+		if (wasStreaming && this.meta.lapRecords.length > 0) {
+			return Date.now();
+		}
+		return this.meta.sessionEndedAt;
+	}
+
 	private handleSession(session: TSessionInfo): void {
 		const isNewSession = this.meta.session?.sessionId !== session.sessionId;
 		if (isNewSession) {
@@ -152,6 +171,7 @@ export class TelemetryStore {
 				field: [],
 				bestLapMs: null,
 				weather: [],
+				sessionEndedAt: null,
 			});
 			void this.restoreLaps(session.sessionId);
 		} else {

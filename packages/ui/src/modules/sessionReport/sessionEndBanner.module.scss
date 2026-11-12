@@ -1,0 +1,34 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+.banner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+
+	padding: 10px 24px;
+
+	background-color: $surface_raised;
+	border-bottom: 1px solid $stroke_primary;
+	border-inline-start: 3px solid $system_success;
+}
+
+.text {
+	flex: 1 1 240px;
+
+	color: $text_primary;
+	@extend %font-body-md;
+}
+
+.link {
+	color: $text_active;
+	text-decoration: none;
+	@extend %font-label-md;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}

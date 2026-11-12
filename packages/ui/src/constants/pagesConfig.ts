@@ -1,5 +1,6 @@
 import GhostLap from 'src/pages/analysis/ghostLap/GhostLap';
 import TrackMap from 'src/pages/analysis/trackMap/TrackMap';
+import SessionReport from 'src/pages/analysis/sessionReport/SessionReport';
 import CarHealth from 'src/pages/live/carHealth/CarHealth';
 import DriverTelemetry from 'src/pages/live/driverTelemetry/DriverTelemetry';
 import Timing from 'src/pages/live/timing/Timing';
@@ -61,6 +62,12 @@ export const pagesConfig: TPagesConfig = {
 				tKey: 'pagesNames.analysis.trackMapTab',
 				path: '/track-map',
 				Component: TrackMap,
+			},
+			report: {
+				title: 'Session report',
+				tKey: 'pagesNames.analysis.reportTab',
+				path: '/report',
+				Component: SessionReport,
 			},
 		},
 	},

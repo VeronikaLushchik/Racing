@@ -1,0 +1,206 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/variables';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+.report {
+	@include flex-list;
+	gap: 16px;
+}
+
+.status {
+	margin: 0;
+
+	color: $text_secondary;
+	@extend %font-label-md;
+
+	&[data-is-ended='true'] {
+		color: $system_success;
+	}
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 12px;
+
+	@media all and (max-width: $tabletBreakpoint) {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	@media all and (max-width: $mobileBreakpoint) {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.stat {
+	@include flex-list;
+	gap: 4px;
+
+	padding: 8px 16px;
+
+	@extend %card;
+}
+
+.stat_label,
+.stat_hint {
+	color: $text_secondary;
+	@extend %font-body-sm;
+}
+
+.stat_value {
+	@extend %font-numeric-md;
+
+	&[data-tone='best'] {
+		color: $sector_purple;
+	}
+
+	&[data-tone='ideal'] {
+		color: $system_success;
+	}
+}
+
+.row {
+	display: grid;
+	grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+	align-items: start;
+	gap: 16px;
+
+	@media all and (max-width: $tabletBreakpoint) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.chart_panel > div:last-child {
+	flex: none;
+	height: 320px;
+}
+
+.chart {
+	width: 100%;
+	height: 100%;
+}
+
+.improvements {
+	@include flex-list;
+	gap: 12px;
+
+	margin: 0;
+	padding: 0;
+
+	list-style: none;
+	counter-reset: improvement;
+}
+
+.improvement {
+	@include flex-list;
+	gap: 4px;
+
+	padding: 12px 16px;
+
+	border-inline-start: 3px solid $system_success;
+	@extend %card;
+
+	counter-increment: improvement;
+
+	&[data-kind='consistency'] {
+		border-inline-start-color: $system_warning;
+	}
+
+	&[data-kind='setup'] {
+		border-inline-start-color: $stroke_active;
+	}
+}
+
+.improvement_title {
+	margin: 0;
+
+	color: $text_primary;
+	@extend %font-label-md;
+
+	&::before {
+		content: counter(improvement) '. ';
+		color: $text_secondary;
+	}
+}
+
+.text {
+	margin: 0;
+
+	color: $text_primary;
+	@extend %font-body-md;
+
+	&[data-tone='warning'] {
+		color: $system_warning;
+	}
+}
+
+.findings {
+	@include flex-list;
+	gap: 8px;
+
+	margin: 12px 0 0;
+	padding-inline-start: 18px;
+}
+
+.table_wrap {
+	overflow: auto;
+
+	@extend %scrollbar-sm;
+}
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+
+	@extend %font-numeric-sm;
+
+	th {
+		color: $text_secondary;
+		text-align: start;
+		@extend %font-label-md;
+	}
+
+	th,
+	td {
+		padding: 6px 8px;
+
+		border-bottom: 1px solid $chart_grid;
+
+		white-space: nowrap;
+	}
+
+	tr[data-is-clean='false'] td {
+		color: $text_disabled;
+	}
+
+	td[data-is-best='true'] {
+		color: $sector_purple;
+	}
+
+	td[data-is-loss='true'] {
+		color: $system_dangerous;
+	}
+
+	tfoot td {
+		color: $text_secondary;
+	}
+}
+
+.muted {
+	color: $text_secondary;
+	@extend %font-body-sm;
+}
+
+.empty_text {
+	margin: 0;
+
+	color: $text_secondary;
+}
+
+.empty_hint {
+	margin: 8px 0 0;
+
+	color: $text_disabled;
+	@extend %font-body-sm;
+}
