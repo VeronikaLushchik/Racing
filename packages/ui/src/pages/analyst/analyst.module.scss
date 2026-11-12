@@ -86,3 +86,24 @@
 		grid-template-columns: minmax(0, 1fr);
 	}
 }
+
+.table .verdict {
+	min-width: 280px;
+	max-width: 420px;
+
+	color: $system_warning;
+	white-space: normal;
+	@extend %font-body-sm;
+
+	&[data-verdict='good'] {
+		color: $system_success;
+	}
+}
+
+.table .verdict_muted {
+	min-width: 240px;
+
+	color: $text_secondary;
+	white-space: normal;
+	@extend %font-body-sm;
+}

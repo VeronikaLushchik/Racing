@@ -1,4 +1,4 @@
-import { TLapRecord } from './lapTypings';
+import { LAP_CHANNELS, TLapRecord } from './lapTypings';
 
 const DB_NAME = 'racing';
 const DB_VERSION = 1;
@@ -36,6 +36,17 @@ const transactionDone = (transaction: IDBTransaction): Promise<void> =>
  * arrays are stored as they are (structured clone), a lap is about 100 KB. Every call fails
  * quietly: without storage (private mode, old browser) the app works as before, just forgetful.
  */
+/** Laps saved before a channel was added get it as zeros. */
+const withAllChannels = (record: TLapRecord): TLapRecord => {
+	const missing = LAP_CHANNELS.filter(channel => !record.channels[channel]);
+	if (missing.length === 0) return record;
+	const channels = { ...record.channels };
+	missing.forEach(channel => {
+		channels[channel] = new Float32Array(record.distance.length);
+	});
+	return { ...record, channels };
+};
+
 class LapArchive {
 	private database: Promise<IDBDatabase | null> | null = null;
 
@@ -47,7 +58,7 @@ class LapArchive {
 			}
 			const index = db.transaction(LAPS_STORE).objectStore(LAPS_STORE).index('sessionId');
 			const stored = await requestResult<TStoredLap[]>(index.getAll(sessionId));
-			return stored.map(item => item.record).sort((a, b) => a.lap - b.lap);
+			return stored.map(item => withAllChannels(item.record)).sort((a, b) => a.lap - b.lap);
 		} catch {
 			return [];
 		}

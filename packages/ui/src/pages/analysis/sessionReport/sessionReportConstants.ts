@@ -9,6 +9,9 @@ export const FINDING_KEYS: Record<TDrivingFindingId, TTranslationKey> = {
 	improving: 'report.finding.improving',
 	fading: 'report.finding.fading',
 	trackLimits: 'report.finding.trackLimits',
+	trailStraight: 'report.finding.trailStraight',
+	trailAbrupt: 'report.finding.trailAbrupt',
+	trailOver: 'report.finding.trailOver',
 };
 
 /** Pedal shares shown in the driving panel, in display order. */

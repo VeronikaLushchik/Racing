@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useRef } from 'react';
 
+import { enableAxisZoom } from 'src/modules/chart/chartZoom';
 import echarts from 'src/modules/chart/echartsCore';
 import { useTheme } from '~@ui/common/themeContext';
 import { buildLapCompareOption, TCompareLane } from './ghostLapFunctions';
@@ -50,6 +51,7 @@ const LapCompareChart: FC<LapCompareChartProps> = props => {
 		const laps = { reference, compare, referenceLabel, compareLabel, delta, corners };
 		const chart = echarts.init(container, undefined, { renderer: 'canvas' });
 		chart.setOption(buildLapCompareOption(lanes, laps, theme, container.clientHeight));
+		enableAxisZoom(chart, lanes.length);
 
 		const observer = new ResizeObserver(() => {
 			chart.resize();

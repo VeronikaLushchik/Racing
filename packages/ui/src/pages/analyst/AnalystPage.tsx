@@ -10,6 +10,7 @@ import PitWindow from 'src/pages/strategy/pitWindow/PitWindow';
 import Weather from 'src/pages/strategy/weather/Weather';
 import CornerMatrix from './CornerMatrix';
 import LapDetailTable from './LapDetailTable';
+import TrailBraking from './TrailBraking';
 
 import useTranslation from '~@engines/translations/useTranslation';
 
@@ -34,6 +35,12 @@ const AnalystPage: FC = () => {
 			>
 				<LapDetailTable />
 				<CornerMatrix />
+			</PageSection>
+			<PageSection
+				title={t('analyst.sectionTrail')}
+				hint={t('analyst.sectionTrailHint')}
+			>
+				<TrailBraking />
 			</PageSection>
 			<PageSection
 				title={t('analyst.sectionCompare')}

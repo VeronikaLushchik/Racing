@@ -31,9 +31,9 @@ const FRAME_BYTES = CHANNELS.reduce((sum, c) => sum + SIZES[c.type], 0);
  * A car going round a 1000 m circle clockwise seen from above (right-hand corner, steer > 0)
  * at 36 m/s, sampled at 60 Hz: starts mid-lap, then three full laps. Like Assetto Corsa, the lap
  * timer keeps running for two samples after the line before it resets. `startShare` is where in
- * the lap the recording starts.
+ * the lap the recording starts; `pauseRows` samples of a paused game are recorded mid-lap 2.
  */
-const buildRecording = (startShare = 0.5) => {
+const buildRecording = (startShare = 0.5, pauseRows = 0) => {
 	const radius = 1000 / (2 * Math.PI);
 	const dtMs = 1000 / 60;
 	const lapMs = (1000 / 36) * 1000;
@@ -63,6 +63,17 @@ const buildRecording = (startShare = 0.5) => {
 			accLat: 36 ** 2 / radius / 9.81,
 			accLong: 0,
 		});
+	}
+	if (pauseRows > 0) {
+		// A paused game keeps sending its last state while the clock runs on.
+		const at = Math.round(rows.length * 0.6);
+		const pauseMs = pauseRows * 17;
+		const frozen = Array.from({ length: pauseRows }, (_, k) => ({
+			...rows[at],
+			tRel: rows[at].tRel + (k + 1) * 17,
+		}));
+		const later = rows.slice(at + 1).map(row => ({ ...row, tRel: row.tRel + pauseMs }));
+		rows.splice(at + 1, rows.length, ...frozen, ...later);
 	}
 	const frames = Buffer.alloc(24 + rows.length * FRAME_BYTES);
 	frames.write('RTLG', 0, 'latin1');
@@ -266,4 +277,25 @@ test('a recording that starts on the line counts its first lap', () => {
 		[1, 2, 3, 4],
 	);
 	laps.forEach(lap => assert.equal(lap.isValid, true));
+});
+
+test('samples of a paused game are dropped and the lap stays whole', () => {
+	const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'racing-import-'));
+	const { frames, session } = buildRecording(0.5, 600);
+	const result = importFiles(dataDir, [
+		{ name: 'frames.bin', data: frames },
+		{ name: 'session.json', data: session },
+	]);
+	const messages = readRecording(dataDir, result.file);
+	const laps = messages.filter(m => m.type === 'lap').map(m => m.lap);
+	assert.deepEqual(
+		laps.filter(lap => lap.isValid).map(lap => lap.lap),
+		[1, 2, 3],
+	);
+	laps.forEach(lap => assert.ok(Math.abs(lap.lapTimeMs - 27778) < 40, `lap ${lap.lapTimeMs}`));
+	const frameList = messages.filter(m => m.type === 'frame').map(m => m.frame);
+	const frozen = frameList.filter(
+		(f, i) => i > 0 && f.x === frameList[i - 1].x && f.z === frameList[i - 1].z,
+	);
+	assert.equal(frozen.length, 0);
 });

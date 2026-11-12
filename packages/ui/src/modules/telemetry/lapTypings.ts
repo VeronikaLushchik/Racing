@@ -6,6 +6,7 @@ export const LAP_CHANNELS = [
 	'throttle',
 	'brake',
 	'gear',
+	'rpm',
 	'gLat',
 	'x',
 	'z',

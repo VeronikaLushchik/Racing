@@ -214,3 +214,50 @@ $wideBreakpoint: 1280px;
 		gap: 12px;
 	}
 }
+
+.overlay_export {
+	position: relative;
+}
+
+.overlay_popover {
+	position: absolute;
+	z-index: 10;
+	top: calc(100% + 8px);
+	right: 0;
+
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+
+	width: 320px;
+	padding: 16px;
+	border: 1px solid $stroke_primary;
+	border-radius: 12px;
+
+	background: $surface_raised;
+	box-shadow: 0 12px 32px rgb(0 0 0 / 35%);
+}
+
+.overlay_title {
+	margin: 0;
+	@extend %font-title-sm;
+}
+
+.overlay_buttons {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.overlay_progress {
+	flex: 1;
+	@extend %font-body-md;
+}
+
+.overlay_hint {
+	margin: 0;
+
+	color: $text_secondary;
+	@extend %font-body-sm;
+}

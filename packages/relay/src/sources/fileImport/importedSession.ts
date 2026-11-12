@@ -173,7 +173,61 @@ interface TLapSpan {
  * the session, ~60 Hz frames and a lap summary at every line crossing. The result is written
  * as a normal relay recording, so the replay source plays it into every dashboard view.
  */
-export const buildImportedSession = (table: TChannelTable, sessionId: string): TImportedSession => {
+/**
+ * The table without the samples recorded while the game was paused. A paused game keeps
+ * sending its last state: the car stands still at speed and the lap timer stops. Those samples
+ * are dropped and the time after them moved back, so a lap resumed after a pause stays whole.
+ * A car standing in the pits is not paused: its lap timer runs.
+ */
+const withoutPauses = (table: TChannelTable): TChannelTable => {
+	const lookup: TLookup = new Map(
+		Object.entries(table.channels).map(([name, channel]) => [normalizeName(name), channel]),
+	);
+	const x = find(lookup, ALIASES.x);
+	const z = find(lookup, ALIASES.z);
+	const speed = find(lookup, ALIASES.speedKmh) ?? find(lookup, ALIASES.speedMs);
+	const lapMs = find(lookup, ALIASES.lapMs);
+	const timeColumn = findNamed(lookup, ALIASES.time);
+	if (!x || !z || !speed || !timeColumn) return table;
+	const time = timeColumn[1].values;
+	const isFrozen = (i: number): boolean =>
+		x.values[i] === x.values[i - 1] &&
+		z.values[i] === z.values[i - 1] &&
+		speed.values[i] === speed.values[i - 1] &&
+		(lapMs ? lapMs.values[i] === lapMs.values[i - 1] : speed.values[i] > 0);
+
+	const keep: number[] = [0];
+	const shift = new Float64Array(table.count);
+	let pausedTime = 0;
+	for (let i = 1; i < table.count; i += 1) {
+		if (isFrozen(i)) {
+			pausedTime += time[i] - time[i - 1];
+		} else {
+			keep.push(i);
+		}
+		shift[i] = pausedTime;
+	}
+	if (keep.length === table.count) return table;
+
+	const channels: Record<string, TChannel> = {};
+	Object.entries(table.channels).forEach(([name, channel]) => {
+		const values = new Float64Array(keep.length);
+		keep.forEach((from, to) => {
+			values[to] =
+				channel === timeColumn[1]
+					? channel.values[from] - shift[from]
+					: channel.values[from];
+		});
+		channels[name] = { ...channel, values };
+	});
+	return { ...table, count: keep.length, channels };
+};
+
+export const buildImportedSession = (
+	rawTable: TChannelTable,
+	sessionId: string,
+): TImportedSession => {
+	const table = withoutPauses(rawTable);
 	const lookup: TLookup = new Map(
 		Object.entries(table.channels).map(([name, channel]) => [normalizeName(name), channel]),
 	);

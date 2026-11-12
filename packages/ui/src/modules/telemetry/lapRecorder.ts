@@ -57,6 +57,7 @@ export class LapRecorder {
 		this.raw.throttle.push(frame.throttle);
 		this.raw.brake.push(frame.brake);
 		this.raw.gear.push(frame.gear);
+		this.raw.rpm.push(frame.rpm);
 		this.raw.gLat.push(frame.gLat);
 		this.raw.x.push(frame.x);
 		this.raw.z.push(frame.z);

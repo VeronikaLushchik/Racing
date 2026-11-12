@@ -165,7 +165,7 @@ const GhostLap: FC = () => {
 			<div className={classes.overlay_row}>
 				<Panel
 					title={t('ghost.overlay')}
-					subtitle={t('ghost.overlayHint', referenceLabel, compareLabel)}
+					subtitle={`${t('ghost.overlayHint', referenceLabel, compareLabel)} ${t('chart.zoomHint')}`}
 					className={classes.overlay}
 				>
 					<LapCompareChart
