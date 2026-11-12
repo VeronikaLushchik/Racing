@@ -35,11 +35,14 @@ export type TServerMessage =
 	| { type: 'frame'; frame: TTelemetryFrame }
 	| { type: 'lap'; lap: TLapSummary }
 	| { type: 'field'; entries: TFieldEntry[] }
-	| { type: 'weather'; weather: TWeatherSample };
+	| { type: 'weather'; weather: TWeatherSample }
+	/** Playback speed of a replayed source; null for live sources, which cannot change it. */
+	| { type: 'playback'; rate: number | null };
 
 export type TClientMessage =
 	| { type: 'selectSource'; source: TSourceKind; options?: TSourceOptions }
-	| { type: 'stopSource' };
+	| { type: 'stopSource' }
+	| { type: 'setRate'; rate: number };
 
 /** What a file import produced; returned by POST /api/imports. */
 export interface TImportResult {
