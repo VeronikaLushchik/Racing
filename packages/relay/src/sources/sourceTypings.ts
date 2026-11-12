@@ -21,6 +21,8 @@ export interface TSourceSink {
 export interface TTelemetrySource {
 	start: () => Promise<void>;
 	stop: () => void;
+	/** Sources that play recorded data can change speed while running. */
+	setRate?: (rate: number) => number;
 }
 
 export type TSourceFactory = (sink: TSourceSink, options: TSourceOptions) => TTelemetrySource;

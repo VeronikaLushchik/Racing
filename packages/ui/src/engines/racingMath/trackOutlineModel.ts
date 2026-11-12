@@ -121,13 +121,47 @@ export const outlinesMatch = (
 	return distances[Math.floor(distances.length / 2)] <= MATCH_TOLERANCE_M;
 };
 
-/** The saved outline the car is driving on right now, by its coordinates. */
+/**
+ * The saved outline the car is driving on, judged by its recent path rather than one point:
+ * a single point can land near any track drawn in another game's coordinates. Every point
+ * must lie on the outline; when several fit, the closest wins.
+ */
 export const findOutlineAt = <T extends TTrackOutline>(
 	outlines: T[],
-	x: number,
-	z: number,
-): T | null =>
-	outlines.find(outline => nearestPoint(outline, x, z).distanceM <= ALIGN_TOLERANCE_M) ?? null;
+	trail: TTrackPoint[],
+): T | null => {
+	const points = trail.filter(point => Number.isFinite(point.x) && Number.isFinite(point.z));
+	if (points.length === 0) {
+		return null;
+	}
+	let best: T | null = null;
+	let bestScore = Infinity;
+	outlines.forEach(outline => {
+		let worst = 0;
+		let total = 0;
+		for (const point of points) {
+			const { distanceM } = nearestPoint(outline, point.x, point.z);
+			worst = Math.max(worst, distanceM);
+			total += distanceM;
+			if (worst > ALIGN_TOLERANCE_M) {
+				return;
+			}
+		}
+		const score = total / points.length;
+		if (score < bestScore) {
+			best = outline;
+			bestScore = score;
+		}
+	});
+	return best;
+};
+
+/** Library id of a track by its name, so the same track from a game is saved once. */
+export const trackIdOf = (name: string): string =>
+	name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '');
 
 /**
  * Adds `outline` to the library: it replaces a saved outline of the same track when it was

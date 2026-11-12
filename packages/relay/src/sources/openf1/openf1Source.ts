@@ -9,6 +9,7 @@ const FIELD_EVERY_TICKS = 10;
 
 /** Replays a real Formula 1 race from OpenF1 historical data as if it were live. */
 export class OpenF1Source implements TTelemetrySource {
+	private rate = Math.min(16, Math.max(0.25, this.options.rate ?? 1));
 	private timer: NodeJS.Timeout | null = null;
 	private isStopped = false;
 
@@ -67,12 +68,11 @@ export class OpenF1Source implements TTelemetrySource {
 		}
 
 		this.sink.status('streaming', null);
-		const rate = Math.min(16, Math.max(0.25, this.options.rate ?? 1));
 		let t = timeline.startMs;
 		let ticks = 0;
 		let weatherIndex = -1;
 		this.timer = setInterval(() => {
-			const next = t + TICK_MS * rate;
+			const next = t + TICK_MS * this.rate;
 			if (next > timeline.endMs) {
 				this.stop();
 				this.sink.status('idle', 'Race replay finished.');
@@ -90,6 +90,12 @@ export class OpenF1Source implements TTelemetrySource {
 				if (weather) this.sink.weather(weather);
 			}
 		}, TICK_MS);
+	}
+
+	/** Changes the playback speed of a running race; returns the speed applied. */
+	setRate(rate: number): number {
+		this.rate = Math.min(16, Math.max(0.25, rate));
+		return this.rate;
 	}
 
 	stop(): void {

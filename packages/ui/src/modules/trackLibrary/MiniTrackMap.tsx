@@ -6,7 +6,12 @@ import Field from '~@ui/Field/Field';
 import echarts from 'src/modules/chart/echartsCore';
 import useTranslation from '~@engines/translations/useTranslation';
 import { useTheme } from '~@ui/common/themeContext';
-import { alignToOutline, findOutlineAt } from '~@engines/racingMath/trackOutlineModel';
+import {
+	alignToOutline,
+	findOutlineAt,
+	trackIdOf,
+	TTrackPoint,
+} from '~@engines/racingMath/trackOutlineModel';
 import { safeStorage } from 'src/services/functions';
 import { useTelemetryMeta, useTelemetryStore } from 'src/modules/telemetry/useTelemetry';
 import { buildMiniMapOption } from './miniTrackMapFunctions';
@@ -19,6 +24,9 @@ import classes from './miniTrackMap.module.scss';
 const AUTO = 'auto';
 const CHOICE_STORAGE_KEY = 'racing.trackChoice';
 const CAR_HZ = 10;
+/** Auto mode checks this much of the car's recent path against the saved tracks. */
+const TRAIL_MS = 8000;
+const TRAIL_POINTS = 8;
 
 export interface TMapCursor {
 	x: number;
@@ -29,6 +37,8 @@ export interface TMapCursor {
 interface MiniTrackMapProps {
 	/** Point under the chart cursor, drawn as a ring; null when the cursor is off the chart. */
 	cursor: TMapCursor | null;
+	/** Stretch the map to the height it is given instead of keeping 4:3. */
+	isFill?: boolean;
 	className?: string;
 }
 
@@ -38,7 +48,7 @@ interface MiniTrackMapProps {
  * to it by coordinates, or by lap distance when the coordinates do not fit.
  */
 const MiniTrackMap: FC<MiniTrackMapProps> = props => {
-	const { cursor, className } = props;
+	const { cursor, isFill = false, className } = props;
 
 	const t = useTranslation();
 	const theme = useTheme();
@@ -65,25 +75,41 @@ const MiniTrackMap: FC<MiniTrackMapProps> = props => {
 		safeStorage.set(CHOICE_STORAGE_KEY, value);
 	};
 
-	// Auto: look for the saved track under the car once a second.
+	// Auto: the session's own track by name, else the saved track under the car's recent path.
+	// A track that no longer fits is dropped, so a wrong pick does not stick.
+	const sessionTrackId = session?.track ? trackIdOf(session.track) : null;
+	useEffect(() => {
+		setAutoId(null);
+	}, [session?.sessionId]);
+
 	useEffect(() => {
 		if (choice !== AUTO) {
 			return undefined;
 		}
 		const find = () => {
-			const frame = store.latestFrame;
-			if (!frame) {
+			const library = trackLibrary.getAll();
+			const named = sessionTrackId && library.find(item => item.id === sessionTrackId);
+			if (named) {
+				setAutoId(named.id);
 				return;
 			}
-			const found = findOutlineAt(trackLibrary.getAll(), frame.x, frame.z);
-			if (found) {
-				setAutoId(found.id);
+			const { buffer } = store;
+			if (buffer.count === 0) {
+				return;
 			}
+			const from = buffer.firstIndexSince((buffer.latest('t') ?? 0) - TRAIL_MS);
+			const span = buffer.count - 1 - from;
+			const trail: TTrackPoint[] = [];
+			for (let k = 0; k < TRAIL_POINTS; k += 1) {
+				const i = from + Math.round((span * k) / Math.max(1, TRAIL_POINTS - 1));
+				trail.push({ x: buffer.get('x', i), z: buffer.get('z', i) });
+			}
+			setAutoId(findOutlineAt(library, trail)?.id ?? null);
 		};
 		find();
 		const timer = window.setInterval(find, 1000);
 		return () => window.clearInterval(timer);
-	}, [choice, store, outlines]);
+	}, [choice, store, outlines, sessionTrackId]);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -143,7 +169,10 @@ const MiniTrackMap: FC<MiniTrackMapProps> = props => {
 
 	return (
 		<div className={className}>
-			<div className={classes.mini_track_map}>
+			<div
+				className={classes.mini_track_map}
+				data-is-fill={isFill}
+			>
 				<Field label={t('miniMap.track')}>
 					<select
 						value={choice}

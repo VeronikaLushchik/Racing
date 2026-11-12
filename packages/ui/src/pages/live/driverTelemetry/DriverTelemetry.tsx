@@ -9,9 +9,17 @@ import LiveReadout from './LiveReadout';
 import PedalBars from './PedalBars';
 
 import useTranslation from '~@engines/translations/useTranslation';
-import { useTelemetryMeta, useTelemetryStore } from 'src/modules/telemetry/useTelemetry';
+import useTelemetry, {
+	useTelemetryMeta,
+	useTelemetryStore,
+} from 'src/modules/telemetry/useTelemetry';
 
-import { DEFAULT_TRACE_WINDOW_S, TRACE_WINDOWS_S } from './driverTelemetryConstants';
+import {
+	DEFAULT_TRACE_WINDOW_S,
+	MAX_PLAYBACK_RATE,
+	PLAYBACK_RATES,
+	TRACE_WINDOWS_S,
+} from './driverTelemetryConstants';
 
 import { TTraceLane } from 'src/modules/chart/chartTypings';
 import { TOption } from 'src/typings';
@@ -20,8 +28,9 @@ import classes from './driverTelemetry.module.scss';
 
 const DriverTelemetry: FC = () => {
 	const t = useTranslation();
-	const { session } = useTelemetryMeta();
+	const { session, playbackRate, relaySource, relayState } = useTelemetryMeta();
 	const store = useTelemetryStore();
+	const { send } = useTelemetry();
 
 	const [windowSeconds, setWindowSeconds] = useState<number>(DEFAULT_TRACE_WINDOW_S);
 	const [cursor, setCursor] = useState<TMapCursor | null>(null);
@@ -111,13 +120,40 @@ const DriverTelemetry: FC = () => {
 		[setWindowSeconds],
 	);
 
+	// Speed of a replayed source, changed while it plays.
+	const maxRate = (relaySource && MAX_PLAYBACK_RATE[relaySource]) ?? null;
+	const rateOptions = useMemo<TOption[]>(
+		() =>
+			PLAYBACK_RATES.filter(rate => maxRate !== null && rate <= maxRate).map(rate => ({
+				value: String(rate),
+				label: `×${rate}`,
+			})),
+		[maxRate],
+	);
+	const handleRateSet = useCallback(
+		(value: string) => send({ type: 'setRate', rate: Number(value) }),
+		[send],
+	);
+	const canChangeRate =
+		playbackRate !== null && rateOptions.length > 0 && relayState === 'streaming';
+
 	const windowActions = (
-		<SegmentedToggle
-			value={String(windowSeconds)}
-			options={windowOptions}
-			onSet={handleWindowSet}
-			ariaLabel={t('driver.traceWindow')}
-		/>
+		<div className={classes.trace_actions}>
+			{canChangeRate && (
+				<SegmentedToggle
+					value={String(playbackRate)}
+					options={rateOptions}
+					onSet={handleRateSet}
+					ariaLabel={t('common.speedRate')}
+				/>
+			)}
+			<SegmentedToggle
+				value={String(windowSeconds)}
+				options={windowOptions}
+				onSet={handleWindowSet}
+				ariaLabel={t('driver.traceWindow')}
+			/>
+		</div>
 	);
 
 	const isGDerived = session ? !session.capabilities.hasMeasuredG : false;
@@ -137,17 +173,31 @@ const DriverTelemetry: FC = () => {
 				/>
 			</Panel>
 			<div className={classes.side_column}>
-				<Panel title={t('miniMap.title')}>
-					<MiniTrackMap cursor={cursor} />
+				<Panel
+					title={t('miniMap.title')}
+					className={classes.map_panel}
+				>
+					<MiniTrackMap
+						cursor={cursor}
+						className={classes.map_fill}
+						isFill
+					/>
 				</Panel>
-				<Panel title={t('driver.readout')}>
+				<Panel
+					title={t('driver.readout')}
+					className={classes.readout_panel}
+				>
 					<LiveReadout />
 				</Panel>
-				<Panel title={t('driver.pedals')}>
+				<Panel
+					title={t('driver.pedals')}
+					className={classes.pedals_panel}
+				>
 					<PedalBars />
 				</Panel>
 				<Panel
 					title={t('driver.gg')}
+					className={classes.gg_panel}
 					subtitle={isGDerived ? t('driver.derivedG') : t('driver.ggHint')}
 				>
 					<GGDiagram ariaLabel={t('driver.gg')} />

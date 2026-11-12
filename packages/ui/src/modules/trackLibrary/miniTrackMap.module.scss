@@ -5,6 +5,18 @@
 .mini_track_map {
 	@include flex-list;
 	gap: 8px;
+
+	&[data-is-fill='true'] {
+		height: 100%;
+
+		.map,
+		.placeholder {
+			flex: 1;
+			min-height: 140px;
+
+			aspect-ratio: auto;
+		}
+	}
 }
 
 .map,

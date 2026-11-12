@@ -3,6 +3,10 @@
 @import 'src/ui/common/fonts';
 @import 'src/ui/common/boxStyles';
 
+/** Header and tabs above the page plus the bottom padding, px. */
+$driverPageTop: 146px;
+$wideBreakpoint: 1280px;
+
 .driver_telemetry {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 320px;
@@ -32,6 +36,17 @@
 .side_column {
 	@include flex-list;
 	gap: 16px;
+}
+
+.trace_actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.map_fill {
+	height: 100%;
 }
 
 .readout {
@@ -138,4 +153,64 @@
 	margin: 0 auto;
 
 	aspect-ratio: 1;
+}
+
+/*
+ * Wide screens: the page fits the window without scrolling. The chart takes the full height and
+ * the side panels sit in two columns: track map over pedals, readout over the G-G diagram.
+ */
+@media all and (min-width: $wideBreakpoint) {
+	.driver_telemetry {
+		grid-template-columns: minmax(0, 1fr) 560px;
+
+		height: calc(100vh - #{$driverPageTop});
+		min-height: 560px;
+	}
+
+	.traces {
+		min-height: 0;
+
+		> div:last-child {
+			height: auto;
+		}
+	}
+
+	.side_column {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-rows: auto minmax(0, 1fr) auto;
+		grid-template-areas:
+			'map readout'
+			'map gg'
+			'pedals gg';
+		gap: 16px;
+
+		min-height: 0;
+	}
+
+	.map_panel {
+		grid-area: map;
+		min-height: 0;
+	}
+
+	.readout_panel {
+		grid-area: readout;
+	}
+
+	.pedals_panel {
+		grid-area: pedals;
+	}
+
+	.gg_panel {
+		grid-area: gg;
+		min-height: 0;
+	}
+
+	.pedal_track {
+		height: 96px;
+	}
+
+	.readout {
+		gap: 12px;
+	}
 }

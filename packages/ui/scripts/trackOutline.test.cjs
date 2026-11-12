@@ -52,8 +52,22 @@ test('the same track is recognised, a different one is not', () => {
 	assert.equal(outlinesMatch(a, buildOutline(circleLap(200, 59000, 3), meta('b'))), true);
 	assert.equal(outlinesMatch(a, buildOutline(circleLap(200, 59000, 300), meta('c'))), false);
 	assert.equal(outlinesMatch(a, buildOutline(circleLap(260, 59000), meta('d'))), false);
-	assert.equal(findOutlineAt([a], 0, 199).id, 'a');
-	assert.equal(findOutlineAt([a], 0, 0), null);
+	assert.equal(findOutlineAt([a], [{ x: 0, z: 199 }]).id, 'a');
+	assert.equal(findOutlineAt([a], [{ x: 0, z: 0 }]), null);
+});
+
+test('auto track pick needs the whole recent path on the track and prefers the closest', () => {
+	const a = buildOutline(circleLap(200, 60000), meta('a'));
+	const b = buildOutline(circleLap(200, 60000, 30), meta('b'));
+	// Crosses circle a once (at x = 200, z = 0) but then leaves it.
+	const crossing = [
+		{ x: 200, z: 0 },
+		{ x: 260, z: 0 },
+		{ x: 320, z: 0 },
+	];
+	assert.equal(findOutlineAt([a], crossing), null);
+	const onB = [0, 1, 2].map(i => ({ x: Math.cos(i / 10) * 200 + 30, z: Math.sin(i / 10) * 200 }));
+	assert.equal(findOutlineAt([a, b], onB).id, 'b');
 });
 
 test('a faster lap of a saved track replaces it but keeps the name', () => {

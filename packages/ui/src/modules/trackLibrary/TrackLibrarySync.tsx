@@ -1,15 +1,9 @@
 import { FC, useEffect } from 'react';
 
-import { buildOutline } from '~@engines/racingMath/trackOutlineModel';
+import { buildOutline, trackIdOf } from '~@engines/racingMath/trackOutlineModel';
 import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
 import { findBestRecord } from 'src/pages/analysis/common/analysisFunctions';
 import { trackLibrary } from './trackLibrary';
-
-const slug = (text: string): string =>
-	text
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-|-$/g, '');
 
 /**
  * Saves the outline of the session's best clean lap, so the track can be picked again later.
@@ -39,7 +33,7 @@ const TrackLibrarySync: FC = () => {
 					lapTimeMs: best.lapTimeMs,
 				},
 				{
-					id: session.track ? slug(session.track) : `track-${session.sessionId}`,
+					id: session.track ? trackIdOf(session.track) : `track-${session.sessionId}`,
 					name,
 					savedAt,
 				},

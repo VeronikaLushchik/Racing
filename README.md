@@ -49,7 +49,8 @@ Open the dashboard, pick a mode on **Data source** and press **Start**.
 - **Recorded file:** on the **Open a recorded file** card pick `session.json` and `frames.bin` together
   (or one `.ndjson.gz`). The relay converts it into a recording in `data/sessions`, so it also appears
   under **Replay** later. Laps cut by a reset to the pits are kept but marked invalid; laps that start
-  in the pit lane are marked as pit laps.
+  in the pit lane are marked as pit laps. While a replay, F1 race or the demo plays, the speed can be
+  changed on the Driver page.
 - Dashboard on another device (tablet next to the wheel): `VITE_RELAY_URL=http://<relay-ip>:8787 npm start`.
 
 ## Project layout

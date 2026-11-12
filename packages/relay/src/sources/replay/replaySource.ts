@@ -14,6 +14,7 @@ export const REPLAY_MAX_RATE = 64;
 /** Plays back a session recorded by the relay (data/sessions/*.ndjson.gz). */
 export class ReplaySource implements TTelemetrySource {
 	private timer: NodeJS.Timeout | null = null;
+	private rate = Math.min(REPLAY_MAX_RATE, Math.max(0.25, this.options.rate ?? 1));
 
 	constructor(
 		private readonly sink: TSourceSink,
@@ -30,13 +31,12 @@ export class ReplaySource implements TTelemetrySource {
 		}
 
 		const messages = await readMessages(file);
-		const rate = Math.min(REPLAY_MAX_RATE, Math.max(0.25, this.options.rate ?? 1));
 		let index = 0;
 		let clock = 0;
 
 		this.sink.status('streaming', null);
 		this.timer = setInterval(() => {
-			clock += TICK_MS * rate;
+			clock += TICK_MS * this.rate;
 			while (index < messages.length) {
 				const message = messages[index];
 				if (message.type === 'frame' && message.frame.t > clock) break;
@@ -48,6 +48,12 @@ export class ReplaySource implements TTelemetrySource {
 				this.sink.status('idle', 'Replay finished.');
 			}
 		}, TICK_MS);
+	}
+
+	/** Changes the playback speed of a running replay; returns the speed applied. */
+	setRate(rate: number): number {
+		this.rate = Math.min(REPLAY_MAX_RATE, Math.max(0.25, rate));
+		return this.rate;
 	}
 
 	stop(): void {

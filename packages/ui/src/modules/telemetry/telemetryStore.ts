@@ -47,6 +47,8 @@ export interface TTelemetryMeta {
 	 * gone silent), ms since epoch; null while streaming. The session report offers itself then.
 	 */
 	sessionEndedAt: number | null;
+	/** Playback speed of a replayed source (replay, F1, demo); null for live GT7. */
+	playbackRate: number | null;
 }
 
 const initialMeta: TTelemetryMeta = {
@@ -55,6 +57,7 @@ const initialMeta: TTelemetryMeta = {
 	relayState: 'idle',
 	relaySource: null,
 	relayMessage: null,
+	playbackRate: null,
 	session: null,
 	laps: [],
 	lapRecords: [],
@@ -116,6 +119,9 @@ export class TelemetryStore {
 					relayMessage: message.message,
 					sessionEndedAt: this.sessionEndedAt(message.state),
 				});
+				break;
+			case 'playback':
+				this.updateMeta({ playbackRate: message.rate });
 				break;
 			case 'session':
 				this.handleSession(message.session);

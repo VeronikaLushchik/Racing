@@ -49,6 +49,7 @@ export class RelayHub {
 	};
 	private lastFrameSentAt = 0;
 	private activeKind: TSourceKind | null = null;
+	private playbackRate: number | null = null;
 
 	constructor(
 		private readonly broadcast: TBroadcast,
@@ -66,12 +67,17 @@ export class RelayHub {
 		this.sessionLaps.forEach(lap => messages.push({ type: 'lap', lap }));
 		if (this.lastField.length) messages.push({ type: 'field', entries: this.lastField });
 		if (this.lastWeather) messages.push({ type: 'weather', weather: this.lastWeather });
+		messages.push({ type: 'playback', rate: this.playbackRate });
 		return messages;
 	}
 
 	async handleClientMessage(message: TClientMessage): Promise<void> {
 		if (message.type === 'selectSource') {
 			await this.select(message.source, message.options ?? {});
+		} else if (message.type === 'setRate') {
+			if (this.source?.setRate && Number.isFinite(message.rate)) {
+				this.setPlayback(this.source.setRate(message.rate));
+			}
 		} else if (message.type === 'stopSource') {
 			this.stopCurrent();
 			this.emit({ type: 'status', state: 'idle', source: null, message: null });
@@ -87,6 +93,7 @@ export class RelayHub {
 		this.lastWeather = null;
 		const sink = this.createSink(kind);
 		this.source = this.createSource(kind, sink, options);
+		this.setPlayback(this.source.setRate ? this.source.setRate(options.rate ?? 1) : null);
 		sink.status('connecting', null);
 		await this.source.start();
 	}
@@ -97,6 +104,13 @@ export class RelayHub {
 		this.recorder?.close();
 		this.recorder = null;
 		this.activeKind = null;
+		this.setPlayback(null);
+	}
+
+	private setPlayback(rate: number | null): void {
+		if (rate === this.playbackRate) return;
+		this.playbackRate = rate;
+		this.broadcast({ type: 'playback', rate });
 	}
 
 	private createSource(

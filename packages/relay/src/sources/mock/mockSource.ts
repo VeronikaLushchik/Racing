@@ -92,7 +92,7 @@ export class MockSource implements TTelemetrySource {
 	private readonly track: TMockTrack = buildMockTrack();
 	private readonly baseLapS = estimateLapTimeS(this.track);
 	private readonly lapTracker = new LapTracker(this.track.length);
-	private readonly rate: number;
+	private rate: number;
 	private timer: NodeJS.Timeout | null = null;
 	private ticks = 0;
 	private lastWeatherT = 0;
@@ -104,6 +104,12 @@ export class MockSource implements TTelemetrySource {
 	) {
 		this.rate = clamp(options.rate ?? 1, 0.25, 8);
 		this.state = this.initialState();
+	}
+
+	/** Changes the simulation speed on the fly; returns the speed applied. */
+	setRate(rate: number): number {
+		this.rate = clamp(rate, 0.25, 8);
+		return this.rate;
 	}
 
 	async start(): Promise<void> {
