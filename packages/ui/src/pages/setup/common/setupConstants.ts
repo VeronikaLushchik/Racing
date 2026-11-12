@@ -1,8 +1,5 @@
 import { TSetupField } from '~@engines/racingMath/setupAdvisorModel';
 
-/** How often the advisor re-reads the evidence, Hz. */
-export const ADVISOR_HZ = 1;
-
 export interface TSetupRow {
 	key: string;
 	front: TSetupField;
