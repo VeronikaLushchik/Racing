@@ -13,10 +13,7 @@ import { pagesConfig } from 'src/constants/pagesConfig';
 
 import classes from './sessionEndBanner.module.scss';
 
-const reportPath = (): string => {
-	const analysis = pagesConfig.analysis;
-	return appUrl(`${analysis.path}${analysis.tabs?.report?.path ?? ''}`);
-};
+const reportPath = (): string => appUrl(pagesConfig.analyst.path);
 
 /** Offers the session report once the stream stops after a session with laps. */
 const SessionEndBanner: FC = () => {

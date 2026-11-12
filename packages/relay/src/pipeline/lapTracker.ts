@@ -1,5 +1,10 @@
 import { TLapSummary, TTelemetryFrame } from '@racing/shared';
 
+/** No circuit is lapped faster than this, ms: a shorter "lap" is a restart or a reset. */
+export const MIN_LAP_MS = 20000;
+/** No circuit is shorter than this, m. */
+export const MIN_LAP_M = 400;
+
 /**
  * Builds lap summaries for sources that only stream frames (GT7, mock).
  * Sectors are split by distance into `sectorCount` equal parts when the track length is known.
@@ -70,11 +75,14 @@ export class LapTracker {
 				sectorsMs.push(bounds[i + 1] - bounds[i]);
 			}
 		}
-		// A lap counts only if we saw it from the line to (nearly) the line again.
+		// A lap counts only if we saw it from the line to (nearly) the line again. Without a track
+		// length, at least it has to be long enough to be a lap at all.
+		const isLongEnough =
+			lapTimeMs >= MIN_LAP_MS && lastFrame.lapDistance - this.lapStartDistance >= MIN_LAP_M;
 		const isComplete = this.trackLength
 			? this.lapStartDistance < this.trackLength * 0.05 &&
 				lastFrame.lapDistance > this.trackLength * 0.9
-			: true;
+			: isLongEnough;
 
 		return {
 			lap: this.currentLap,

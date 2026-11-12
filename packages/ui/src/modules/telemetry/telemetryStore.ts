@@ -11,6 +11,12 @@ import {
 } from '@racing/shared';
 
 import { computeDelta, LapTrace } from '~@engines/racingMath/deltaModel';
+import {
+	isPlausibleLap,
+	isPlausibleRecord,
+	referenceLapLength,
+	withLapQuality,
+} from '~@engines/racingMath/lapQuality';
 import { SetupEvidenceCollector } from '~@engines/racingMath/setupAdvisorModel';
 
 import { lapArchive } from './lapArchive';
@@ -220,7 +226,18 @@ export class TelemetryStore {
 		recorder.push(frame);
 	}
 
-	private handleLap(lap: TLapSummary): void {
+	private handleLap(summary: TLapSummary): void {
+		const trackLength = this.meta.session?.trackLength ?? null;
+		const recorded = this.lapRecorders.get(summary.lap)?.finish(summary, trackLength) ?? null;
+		this.lapRecorders.delete(summary.lap);
+		// A "lap" that did not go round the track (restart, reset, counter jump) is not valid.
+		const reference = referenceLapLength(this.meta.lapRecords, trackLength);
+		const isPlausible = recorded
+			? isPlausibleRecord(recorded, reference)
+			: isPlausibleLap(summary.lapTimeMs, null, reference);
+		const lap = isPlausible ? summary : { ...summary, isValid: false };
+		const record = isPlausible ? recorded : null;
+
 		const laps = [...this.meta.laps.filter(l => l.lap !== lap.lap), lap].sort(
 			(a, b) => a.lap - b.lap,
 		);
@@ -230,10 +247,6 @@ export class TelemetryStore {
 			const trace = [this.previousTrace, this.currentTrace].find(tr => tr?.lap === lap.lap);
 			if (trace && trace.length > 10) this.referenceTrace = trace;
 		}
-		const record =
-			this.lapRecorders.get(lap.lap)?.finish(lap, this.meta.session?.trackLength ?? null) ??
-			null;
-		this.lapRecorders.delete(lap.lap);
 		const sessionId = this.meta.session?.sessionId;
 		if (record && sessionId) {
 			void lapArchive.save(sessionId, record);
@@ -272,9 +285,12 @@ export class TelemetryStore {
 
 	private mergeLapRecords(records: TLapRecord[]): TLapRecord[] {
 		const laps = new Set(records.map(record => record.lap));
-		return [...this.meta.lapRecords.filter(record => !laps.has(record.lap)), ...records]
-			.sort((a, b) => a.lap - b.lap)
-			.slice(-MAX_LAP_RECORDS);
+		return withLapQuality(
+			[...this.meta.lapRecords.filter(record => !laps.has(record.lap)), ...records]
+				.sort((a, b) => a.lap - b.lap)
+				.slice(-MAX_LAP_RECORDS),
+			this.meta.session?.trackLength ?? null,
+		);
 	}
 
 	private updateMeta(patch: Partial<TTelemetryMeta>): void {

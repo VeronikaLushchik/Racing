@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import TraceChart from 'src/modules/chart/TraceChart';
 import MiniTrackMap, { TMapCursor } from 'src/modules/trackLibrary/MiniTrackMap';
@@ -34,6 +34,27 @@ const DriverTelemetry: FC = () => {
 
 	const [windowSeconds, setWindowSeconds] = useState<number>(DEFAULT_TRACE_WINDOW_S);
 	const [cursor, setCursor] = useState<TMapCursor | null>(null);
+	const rootRef = useRef<HTMLDivElement>(null);
+
+	// The page fills the window below whatever sits above it (header, session banner).
+	useEffect(() => {
+		const root = rootRef.current;
+		if (!root) {
+			return undefined;
+		}
+		const measure = () => {
+			const top = root.getBoundingClientRect().top + window.scrollY;
+			root.style.setProperty('--driver-top', `${Math.round(top)}px`);
+		};
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(document.body);
+		window.addEventListener('resize', measure);
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('resize', measure);
+		};
+	}, []);
 
 	// The trace axis is "seconds before now": find the sample under the cursor in the buffer.
 	const handleCursor = useCallback(
@@ -159,7 +180,10 @@ const DriverTelemetry: FC = () => {
 	const isGDerived = session ? !session.capabilities.hasMeasuredG : false;
 
 	return (
-		<div className={classes.driver_telemetry}>
+		<div
+			ref={rootRef}
+			className={classes.driver_telemetry}
+		>
 			<Panel
 				title={t('driver.traces')}
 				className={classes.traces}

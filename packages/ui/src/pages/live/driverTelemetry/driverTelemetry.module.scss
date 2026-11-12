@@ -3,8 +3,8 @@
 @import 'src/ui/common/fonts';
 @import 'src/ui/common/boxStyles';
 
-/** Header and tabs above the page plus the bottom padding, px. */
-$driverPageTop: 146px;
+/** Space under the page, px: the page's bottom padding. */
+$driverPageBottom: 24px;
 $wideBreakpoint: 1280px;
 
 .driver_telemetry {
@@ -163,7 +163,7 @@ $wideBreakpoint: 1280px;
 	.driver_telemetry {
 		grid-template-columns: minmax(0, 1fr) 560px;
 
-		height: calc(100vh - #{$driverPageTop});
+		height: calc(100vh - var(--driver-top, 72px) - #{$driverPageBottom});
 		min-height: 560px;
 	}
 
