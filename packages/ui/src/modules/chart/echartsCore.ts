@@ -2,6 +2,8 @@ import * as echarts from 'echarts/core';
 import { LineChart, ScatterChart } from 'echarts/charts';
 import {
 	AxisPointerComponent,
+	DataZoomInsideComponent,
+	GraphicComponent,
 	GridComponent,
 	MarkAreaComponent,
 	MarkLineComponent,
@@ -14,9 +16,11 @@ import { CanvasRenderer } from 'echarts/renderers';
 echarts.use([
 	LineChart,
 	ScatterChart,
+	GraphicComponent,
 	GridComponent,
 	TooltipComponent,
 	AxisPointerComponent,
+	DataZoomInsideComponent,
 	MarkAreaComponent,
 	MarkLineComponent,
 	VisualMapContinuousComponent,

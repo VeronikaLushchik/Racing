@@ -8,6 +8,7 @@ import {
 	TCornerInsight,
 } from './ghostLapModel';
 import { adviseSetup, TSetupAdvice, TSetupEvidence, TSetupValues } from './setupAdvisorModel';
+import { buildTrailBraking, TTrailBrakingReport } from './trailBrakingModel';
 import { fitLine } from './tyreDegradationModel';
 import { TWeatherAdvice, TWeatherView, weatherAdvice } from './weatherModel';
 
@@ -114,7 +115,10 @@ export type TDrivingFindingId =
 	| 'apexSpread'
 	| 'improving'
 	| 'fading'
-	| 'trackLimits';
+	| 'trackLimits'
+	| 'trailStraight'
+	| 'trailAbrupt'
+	| 'trailOver';
 
 export interface TDrivingFinding {
 	id: TDrivingFindingId;
@@ -168,6 +172,8 @@ export interface TSessionReport {
 	setupFrames: number;
 	weatherAdvice: TWeatherAdvice[];
 	improvements: TImprovement[];
+	/** Trail braking at each braked corner of the best lap; null without corners. */
+	trailBraking: TTrailBrakingReport | null;
 }
 
 export interface TSessionReportInput {
@@ -432,6 +438,17 @@ export const buildSessionReport = (input: TSessionReportInput): TSessionReport |
 	} else if (trendSPerLap !== null && trendSPerLap >= TREND_S_PER_LAP) {
 		findings.push({ id: 'fading', args: [Number(trendSPerLap.toFixed(2))] });
 	}
+	const trailBraking = buildTrailBraking(best, compared);
+	const cornerList = (numbers: number[]): string => numbers.map(n => `T${n}`).join(', ');
+	if (trailBraking?.straightLine.length) {
+		findings.push({ id: 'trailStraight', args: [cornerList(trailBraking.straightLine)] });
+	}
+	if (trailBraking?.overTrail.length) {
+		findings.push({ id: 'trailOver', args: [cornerList(trailBraking.overTrail)] });
+	}
+	if (trailBraking?.abruptRelease.length) {
+		findings.push({ id: 'trailAbrupt', args: [cornerList(trailBraking.abruptRelease)] });
+	}
 	if (records.length >= 4 && summary.invalidLapCount / records.length >= INVALID_SHARE) {
 		findings.push({ id: 'trackLimits', args: [summary.invalidLapCount] });
 	}
@@ -495,5 +512,6 @@ export const buildSessionReport = (input: TSessionReportInput): TSessionReport |
 		setupFrames: evidence?.frames ?? 0,
 		weatherAdvice: weather ? weatherAdvice(weather) : [],
 		improvements: ranked,
+		trailBraking,
 	};
 };

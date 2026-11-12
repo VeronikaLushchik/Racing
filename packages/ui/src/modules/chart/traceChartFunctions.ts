@@ -86,7 +86,8 @@ export const buildTraceChartOption = (
 			axisLabel: {
 				...axisLabel,
 				show: index === lanes.length - 1,
-				formatter: (value: number) => `${value.toFixed(0)} s`,
+				formatter: (value: number) =>
+					`${Number.isInteger(value) ? value : value.toFixed(1)} s`,
 			},
 		})),
 		yAxis: lanes.map((lane, index) => ({

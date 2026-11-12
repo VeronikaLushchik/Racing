@@ -18,14 +18,22 @@ export class TelemetrySocket {
 
 	connect(): void {
 		this.isClosed = false;
+		if (this.retryTimer) window.clearTimeout(this.retryTimer);
+		this.socket?.close();
 		this.store.setConnection('connecting');
 		const socket = new WebSocket(this.url);
 		this.socket = socket;
+		// Only the current socket may touch the store: a socket closed by an earlier close() can
+		// still report after connect() opened the next one (React mounts effects twice in
+		// development), and two live sockets would feed every frame twice.
+		const isCurrent = () => this.socket === socket;
 		socket.onopen = () => {
+			if (!isCurrent()) return;
 			this.retryMs = 500;
 			this.store.setConnection('open');
 		};
 		socket.onmessage = event => {
+			if (!isCurrent()) return;
 			try {
 				this.store.handleMessage(JSON.parse(event.data as string) as TServerMessage);
 			} catch {
@@ -33,6 +41,7 @@ export class TelemetrySocket {
 			}
 		};
 		socket.onclose = () => {
+			if (!isCurrent()) return;
 			this.store.setConnection('closed');
 			if (this.isClosed) return;
 			this.retryTimer = window.setTimeout(() => this.connect(), this.retryMs);

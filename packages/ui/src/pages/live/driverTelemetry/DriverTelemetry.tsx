@@ -6,6 +6,7 @@ import Panel from '~@ui/Panel/Panel';
 import SegmentedToggle from '~@ui/SegmentedToggle/SegmentedToggle';
 import GGDiagram from './GGDiagram';
 import LiveReadout from './LiveReadout';
+import OverlayExport from './OverlayExport';
 import PedalBars from './PedalBars';
 
 import useTranslation from '~@engines/translations/useTranslation';
@@ -21,6 +22,7 @@ import {
 	TRACE_WINDOWS_S,
 } from './driverTelemetryConstants';
 
+import type { ECharts } from 'echarts/core';
 import { TTraceLane } from 'src/modules/chart/chartTypings';
 import { TOption } from 'src/typings';
 
@@ -35,6 +37,7 @@ const DriverTelemetry: FC = () => {
 	const [windowSeconds, setWindowSeconds] = useState<number>(DEFAULT_TRACE_WINDOW_S);
 	const [cursor, setCursor] = useState<TMapCursor | null>(null);
 	const rootRef = useRef<HTMLDivElement>(null);
+	const chartRef = useRef<ECharts | null>(null);
 
 	// The page fills the window below whatever sits above it (header, session banner).
 	useEffect(() => {
@@ -174,6 +177,11 @@ const DriverTelemetry: FC = () => {
 				onSet={handleWindowSet}
 				ariaLabel={t('driver.traceWindow')}
 			/>
+			<OverlayExport
+				lanes={lanes}
+				windowSeconds={windowSeconds}
+				chartRef={chartRef}
+			/>
 		</div>
 	);
 
@@ -186,6 +194,7 @@ const DriverTelemetry: FC = () => {
 		>
 			<Panel
 				title={t('driver.traces')}
+				subtitle={t('chart.zoomHint')}
 				className={classes.traces}
 				actions={windowActions}
 			>
@@ -194,6 +203,7 @@ const DriverTelemetry: FC = () => {
 					windowSeconds={windowSeconds}
 					ariaLabel={t('driver.traces')}
 					onCursor={handleCursor}
+					chartRef={chartRef}
 				/>
 			</Panel>
 			<div className={classes.side_column}>

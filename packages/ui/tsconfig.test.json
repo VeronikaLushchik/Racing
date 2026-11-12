@@ -28,6 +28,8 @@
 		"src/engines/racingMath/sessionReportModel.ts",
 		"src/engines/racingMath/sessionDetailModel.ts",
 		"src/engines/racingMath/lapQuality.ts",
+		"src/engines/racingMath/trailBrakingModel.ts",
+		"src/modules/chart/overlayFunctions.ts",
 		"src/pages/analyst/analystFunctions.ts"
 	]
 }
