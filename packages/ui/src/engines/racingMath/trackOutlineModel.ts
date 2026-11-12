@@ -9,6 +9,10 @@ export interface TTrackOutline {
 	/** Lap time of the lap the outline was drawn from, ms; a faster lap replaces it. */
 	lapTimeMs: number;
 	savedAt: number;
+	/** Source the outline was drawn from (gt7, mock…); missing on outlines saved before. */
+	game?: string | null;
+	/** Named by the game (Assetto Corsa sends the track), so it is found by name, not by shape. */
+	isNamed?: boolean;
 }
 
 export interface TTrackPoint {
@@ -33,7 +37,7 @@ const round = (value: number): number => Math.round(value * 10) / 10;
 /** Outline of a lap resampled every `OUTLINE_STEP_M`, from channels on a `step` m grid. */
 export const buildOutline = (
 	lap: { step: number; x: ArrayLike<number>; z: ArrayLike<number>; lapTimeMs: number },
-	meta: { id: string; name: string; savedAt: number },
+	meta: { id: string; name: string; savedAt: number; game?: string | null; isNamed?: boolean },
 ): TTrackOutline => {
 	const stride = Math.max(1, Math.round(OUTLINE_STEP_M / lap.step));
 	const x: number[] = [];
@@ -163,13 +167,30 @@ export const trackIdOf = (name: string): string =>
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-|-$/g, '');
 
+const isSameGame = (a: Pick<TTrackOutline, 'game'>, b: Pick<TTrackOutline, 'game'>): boolean =>
+	!a.game || !b.game || a.game === b.game;
+
+/**
+ * Saved outlines an unnamed session (GT7) may be on: other unnamed tracks of the same game.
+ * Games draw their tracks in their own coordinates, and a short path near the origin fits many
+ * of them, so a track of another game, or one the game names, is never picked by shape.
+ */
+export const shapeCandidates = <T extends TTrackOutline>(outlines: T[], game: string | null): T[] =>
+	outlines.filter(outline => !outline.isNamed && isSameGame(outline, { game }));
+
 /**
  * Adds `outline` to the library: it replaces a saved outline of the same track when it was
- * drawn from a faster lap (keeping that one's name), and is ignored when slower.
+ * drawn from a faster lap (keeping that one's name), and is ignored when slower. Named tracks
+ * are the same only by name; unnamed ones by shape, within one game.
  */
 export const mergeOutline = (library: TTrackOutline[], outline: TTrackOutline): TTrackOutline[] => {
 	const index = library.findIndex(
-		saved => saved.id === outline.id || outlinesMatch(saved, outline),
+		saved =>
+			saved.id === outline.id ||
+			(!saved.isNamed &&
+				!outline.isNamed &&
+				isSameGame(saved, outline) &&
+				outlinesMatch(saved, outline)),
 	);
 	if (index === -1) {
 		return [...library, outline];

@@ -36,6 +36,8 @@ const TrackLibrarySync: FC = () => {
 					id: session.track ? trackIdOf(session.track) : `track-${session.sessionId}`,
 					name,
 					savedAt,
+					game: session.source,
+					isNamed: Boolean(session.track),
 				},
 			),
 		);

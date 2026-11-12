@@ -8,6 +8,7 @@ const {
 	outlinesMatch,
 	findOutlineAt,
 	mergeOutline,
+	shapeCandidates,
 } = require('../.test-dist/ui/src/engines/racingMath/trackOutlineModel');
 
 /** A circle of radius `r` (length 2πr) sampled every 2 m, optionally shifted. */
@@ -83,4 +84,17 @@ test('a faster lap of a saved track replaces it but keeps the name', () => {
 	assert.equal(merged[0].id, 'a');
 	assert.equal(merged[0].lapTimeMs, 59000);
 	assert.equal(mergeOutline([saved], other).length, 2);
+});
+
+test('tracks of another game, or named by the game, are not matched by shape', () => {
+	const gt7 = { ...buildOutline(circleLap(200, 60000), meta('gt7-a')), game: 'gt7' };
+	const ac = { ...buildOutline(circleLap(200, 59000, 2), meta('vallelunga')), isNamed: true };
+	// Same shape, but Assetto Corsa names its tracks: kept apart.
+	assert.equal(mergeOutline([gt7], ac).length, 2);
+	const mock = { ...buildOutline(circleLap(200, 59000, 2), meta('m')), game: 'mock' };
+	assert.equal(mergeOutline([gt7], mock).length, 2);
+	assert.deepEqual(
+		shapeCandidates([gt7, ac, mock], 'gt7').map(outline => outline.id),
+		['gt7-a'],
+	);
 });

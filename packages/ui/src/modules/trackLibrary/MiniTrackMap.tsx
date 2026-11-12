@@ -9,6 +9,7 @@ import { useTheme } from '~@ui/common/themeContext';
 import {
 	alignToOutline,
 	findOutlineAt,
+	shapeCandidates,
 	trackIdOf,
 	TTrackPoint,
 } from '~@engines/racingMath/trackOutlineModel';
@@ -75,9 +76,11 @@ const MiniTrackMap: FC<MiniTrackMapProps> = props => {
 		safeStorage.set(CHOICE_STORAGE_KEY, value);
 	};
 
-	// Auto: the session's own track by name, else the saved track under the car's recent path.
-	// A track that no longer fits is dropped, so a wrong pick does not stick.
+	// Auto: a session the game names (Assetto Corsa) gets its own track by name or none until
+	// its first clean lap draws it. An unnamed one (GT7) gets the saved track of the same game
+	// under the car's recent path. A track that no longer fits is dropped.
 	const sessionTrackId = session?.track ? trackIdOf(session.track) : null;
+	const game = session?.source ?? null;
 	useEffect(() => {
 		setAutoId(null);
 	}, [session?.sessionId]);
@@ -88,9 +91,8 @@ const MiniTrackMap: FC<MiniTrackMapProps> = props => {
 		}
 		const find = () => {
 			const library = trackLibrary.getAll();
-			const named = sessionTrackId && library.find(item => item.id === sessionTrackId);
-			if (named) {
-				setAutoId(named.id);
+			if (sessionTrackId) {
+				setAutoId(library.find(item => item.id === sessionTrackId)?.id ?? null);
 				return;
 			}
 			const { buffer } = store;
@@ -104,12 +106,12 @@ const MiniTrackMap: FC<MiniTrackMapProps> = props => {
 				const i = from + Math.round((span * k) / Math.max(1, TRAIL_POINTS - 1));
 				trail.push({ x: buffer.get('x', i), z: buffer.get('z', i) });
 			}
-			setAutoId(findOutlineAt(library, trail)?.id ?? null);
+			setAutoId(findOutlineAt(shapeCandidates(library, game), trail)?.id ?? null);
 		};
 		find();
 		const timer = window.setInterval(find, 1000);
 		return () => window.clearInterval(timer);
-	}, [choice, store, outlines, sessionTrackId]);
+	}, [choice, store, outlines, sessionTrackId, game]);
 
 	useEffect(() => {
 		const container = containerRef.current;
