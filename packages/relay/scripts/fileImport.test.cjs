@@ -193,3 +193,59 @@ test('multipart body is split into files', () => {
 	assert.equal(files[0].data.toString(), '{"x":1}');
 	assert.deepEqual([...files[1].data], [0, 13, 10, 255]);
 });
+
+test('restarts that move the lap counter are not laps (GT7 without a lap position)', () => {
+	const channels = [
+		{ key: 'tRel', type: 'u32', scale: 1, unit: 'ms' },
+		{ key: 'lapIndex', type: 'u16', scale: 1, unit: '' },
+		{ key: 'speedKmh', type: 'u16', scale: 10, unit: 'km/h' },
+		{ key: 'posX', type: 'f32', scale: 1, unit: 'm' },
+		{ key: 'posZ', type: 'f32', scale: 1, unit: 'm' },
+	];
+	const frameBytes = 4 + 2 + 2 + 4 + 4;
+	const radius = 1000 / (2 * Math.PI);
+	const lapMs = (1000 / 36) * 1000;
+	// Lap 0 runs to the line, lap 1 is a 3 s restart, laps 2 and 3 are full, lap 4 is cut.
+	const plan = [
+		[0, 10000],
+		[1, 3000],
+		[2, lapMs],
+		[3, lapMs],
+		[4, 5000],
+	];
+	const rows = [];
+	let t = 0;
+	plan.forEach(([lap, duration]) => {
+		for (let local = 0; local < duration; local += 1000 / 60) {
+			const angle = (local / lapMs) * 2 * Math.PI;
+			rows.push([t, lap, 36 * 3.6, radius * Math.cos(angle), radius * Math.sin(angle)]);
+			t += 1000 / 60;
+		}
+	});
+	const frames = Buffer.alloc(24 + rows.length * frameBytes);
+	frames.write('RTLG', 0, 'latin1');
+	frames.writeUInt16LE(1, 4);
+	frames.writeUInt16LE(frameBytes, 6);
+	rows.forEach(([time, lap, speed, x, z], i) => {
+		const offset = 24 + i * frameBytes;
+		frames.writeUInt32LE(Math.round(time), offset);
+		frames.writeUInt16LE(lap, offset + 4);
+		frames.writeUInt16LE(Math.round(speed * 10), offset + 6);
+		frames.writeFloatLE(x, offset + 8);
+		frames.writeFloatLE(z, offset + 12);
+	});
+	const session = { formatVersion: 1, source: 'gt7', frameBytes, channels };
+	const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'racing-import-'));
+	const result = importFiles(dataDir, [
+		{ name: 'frames.bin', data: frames },
+		{ name: 'session.json', data: Buffer.from(JSON.stringify(session)) },
+	]);
+	const laps = readRecording(dataDir, result.file)
+		.filter(m => m.type === 'lap')
+		.map(m => m.lap);
+	assert.deepEqual(
+		laps.filter(lap => lap.isValid).map(lap => lap.lap),
+		[2, 3],
+	);
+	assert.ok(Math.abs(result.bestLapMs - lapMs) < 100, `best ${result.bestLapMs}`);
+});
