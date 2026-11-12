@@ -30,26 +30,27 @@ const FRAME_BYTES = CHANNELS.reduce((sum, c) => sum + SIZES[c.type], 0);
 /**
  * A car going round a 1000 m circle clockwise seen from above (right-hand corner, steer > 0)
  * at 36 m/s, sampled at 60 Hz: starts mid-lap, then three full laps. Like Assetto Corsa, the lap
- * timer keeps running for two samples after the line before it resets.
+ * timer keeps running for two samples after the line before it resets. `startShare` is where in
+ * the lap the recording starts.
  */
-const buildRecording = () => {
+const buildRecording = (startShare = 0.5) => {
 	const radius = 1000 / (2 * Math.PI);
 	const dtMs = 1000 / 60;
 	const lapMs = (1000 / 36) * 1000;
 	const rows = [];
-	let lapStartT = -lapMs * 0.5;
+	let lapStartT = -lapMs * startShare;
 	for (let i = 0; ; i += 1) {
 		const tMs = i * dtMs;
 		const norm = (tMs - lapStartT) / lapMs;
-		const lapIndex = Math.floor((tMs + lapMs * 0.5) / lapMs);
+		const lapIndex = Math.floor((tMs + lapMs * startShare) / lapMs);
 		if (lapIndex > 3) break;
-		const angle = ((tMs + lapMs * 0.5) / lapMs) * 2 * Math.PI;
+		const angle = ((tMs + lapMs * startShare) / lapMs) * 2 * Math.PI;
 		const heldMs = lapIndex > 0 && norm % 1 < 2 / (lapMs / dtMs) ? lapMs : 0;
 		rows.push({
 			tRel: Math.round(tMs),
 			lapIndex,
-			lapMs: Math.round(((tMs + lapMs * 0.5) % lapMs) + heldMs),
-			lapNorm: ((tMs + lapMs * 0.5) / lapMs) % 1,
+			lapMs: Math.round(((tMs + lapMs * startShare) % lapMs) + heldMs),
+			lapNorm: ((tMs + lapMs * startShare) / lapMs) % 1,
 			throttle: 0.8,
 			brake: 0,
 			steer: 0.2,
@@ -248,4 +249,21 @@ test('restarts that move the lap counter are not laps (GT7 without a lap positio
 		[2, 3],
 	);
 	assert.ok(Math.abs(result.bestLapMs - lapMs) < 100, `best ${result.bestLapMs}`);
+});
+
+test('a recording that starts on the line counts its first lap', () => {
+	const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'racing-import-'));
+	const { frames, session } = buildRecording(0);
+	const result = importFiles(dataDir, [
+		{ name: 'frames.bin', data: frames },
+		{ name: 'session.json', data: session },
+	]);
+	const laps = readRecording(dataDir, result.file)
+		.filter(m => m.type === 'lap')
+		.map(m => m.lap);
+	assert.deepEqual(
+		laps.map(lap => lap.lap),
+		[1, 2, 3, 4],
+	);
+	laps.forEach(lap => assert.equal(lap.isValid, true));
 });

@@ -23,6 +23,8 @@ const BREAK_JUMP_M = 30;
 const BREAK_NORM_JUMP = 0.05;
 /** Share of the track length a lap must drive to count. */
 const FULL_LAP_SHARE = 0.9;
+/** Lap timer below this at the first sample means the recording started on the line, ms. */
+const START_TIMER_MS = 500;
 const SECTOR_COUNT = 3;
 const SMOOTHING = 0.25;
 
@@ -242,6 +244,22 @@ export const buildImportedSession = (table: TChannelTable, sessionId: string): T
 		if (rawGap[i] > BREAK_GAP_MS || jump > BREAK_JUMP_M || normJump > BREAK_NORM_JUMP) {
 			last.isBroken = true;
 		}
+	}
+
+	// The recorder's counter is the number of laps done, so lap 0 is usually the run to the line.
+	// A recording that starts on the line with the lap timer at zero (a hotlap) has a whole lap 0:
+	// then laps are numbered from 1 like the game shows them.
+	const startsOnLine =
+		spans.length > 0 &&
+		spans[0].lap === 0 &&
+		lapNorm !== null &&
+		lapNorm.values[0] < BREAK_NORM_JUMP &&
+		(!lapMsOf || lapMsOf(0) < START_TIMER_MS);
+	if (startsOnLine) {
+		spans.forEach(span => {
+			span.lap += 1;
+		});
+		for (let i = 0; i < n; i += 1) lapOf[i] += 1;
 	}
 
 	// Distance driven within each lap, integrated from speed.
