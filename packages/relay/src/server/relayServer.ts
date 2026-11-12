@@ -4,13 +4,22 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { TClientMessage, TServerMessage } from '@racing/shared';
 
 import { listRecordings } from '../pipeline/recorder';
+import { importFiles } from '../sources/fileImport/fileImport';
+import { ImportError } from '../sources/fileImport/importTypings';
 import { OpenF1Client } from '../sources/openf1/openf1Client';
+import { parseMultipart, readBody } from './multipartBody';
 import { RelayHub } from './relayHub';
+
+const CORS_HEADERS = {
+	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+	'Access-Control-Allow-Headers': 'Content-Type',
+};
 
 const sendJson = (res: http.ServerResponse, status: number, body: unknown): void => {
 	res.writeHead(status, {
 		'Content-Type': 'application/json',
-		'Access-Control-Allow-Origin': '*',
+		...CORS_HEADERS,
 	});
 	res.end(JSON.stringify(body));
 };
@@ -31,6 +40,15 @@ export const startRelayServer = (port: number, dataDir: string): http.Server => 
 	const server = http.createServer(async (req, res) => {
 		const url = new URL(req.url ?? '/', 'http://localhost');
 		try {
+			if (req.method === 'OPTIONS') {
+				res.writeHead(204, CORS_HEADERS);
+				return res.end();
+			}
+			if (url.pathname === '/api/imports' && req.method === 'POST') {
+				const body = await readBody(req);
+				const files = parseMultipart(body, req.headers['content-type'] ?? '');
+				return sendJson(res, 200, importFiles(dataDir, files));
+			}
 			if (url.pathname === '/api/health') return sendJson(res, 200, { ok: true });
 			if (url.pathname === '/api/recordings')
 				return sendJson(res, 200, listRecordings(dataDir));
@@ -46,6 +64,10 @@ export const startRelayServer = (port: number, dataDir: string): http.Server => 
 			}
 			return sendJson(res, 404, { messageKey: 'notFound' });
 		} catch (error) {
+			if (error instanceof ImportError) {
+				const status = error.messageKey === 'importTooLarge' ? 413 : 400;
+				return sendJson(res, status, { messageKey: error.messageKey });
+			}
 			const message = error instanceof Error ? error.message : String(error);
 			return sendJson(res, 502, { messageKey: 'upstreamError', message });
 		}

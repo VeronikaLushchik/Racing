@@ -4,6 +4,7 @@ export const appUrl = (path: string): string => path;
 
 export const API_PATHS = {
 	recordings: `${API_URL}/api/recordings`,
+	imports: `${API_URL}/api/imports`,
 	f1Sessions: `${API_URL}/api/f1/sessions`,
 	f1Drivers: `${API_URL}/api/f1/drivers`,
 };

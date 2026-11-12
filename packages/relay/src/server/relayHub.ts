@@ -120,6 +120,8 @@ export class RelayHub {
 	private createSink(kind: TSourceKind): TSourceSink {
 		const isCurrent = (): boolean => this.activeKind === kind;
 		const shouldRecord = kind === 'gt7' || kind === 'mock';
+		// A replay already paces its frames; at high speed every one is needed for lap analysis.
+		const shouldThrottle = kind !== 'replay';
 
 		return {
 			session: session => {
@@ -139,7 +141,7 @@ export class RelayHub {
 				if (!isCurrent()) return;
 				this.recorder?.write({ type: 'frame', frame });
 				const now = Date.now();
-				if (now - this.lastFrameSentAt < MIN_FRAME_GAP_MS) return;
+				if (shouldThrottle && now - this.lastFrameSentAt < MIN_FRAME_GAP_MS) return;
 				this.lastFrameSentAt = now;
 				this.broadcast({ type: 'frame', frame });
 			},

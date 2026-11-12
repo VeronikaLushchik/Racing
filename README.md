@@ -22,6 +22,7 @@ Recorded sessions (replay) ──────────┘        │
 | **Formula 1, real races** | [OpenF1](https://openf1.org) historical API (free, no key). One driver's race is downloaded once, cached in `data/f1/cache`, and replayed as if live (×1–×8). | Speed, RPM, gear, throttle, brake on/off, position on track, laps with sectors, tyre compounds, the whole field with gaps. |
 | **Demo circuit** | Built-in simulator on a fictional 3.8 km circuit with nine rivals. | Every channel, including tyre zones, brake temps and wear. Works anywhere. |
 | **Replay** | Sessions the relay recorded from GT7 or the demo. | Whatever the original source had. |
+| **Open a recorded file** | A session recorded from GT7 or Assetto Corsa by the telemetry recorder (`session.json` + `frames.bin`), or a relay recording (`.ndjson.gz`) from another computer. | Every channel in the file: laps with sectors, track map, ghost lap. Plays up to ×64. |
 
 Each source announces its capabilities, so panels a source cannot fill are hidden or simplified.
 Assetto Corsa / ACC are not supported: on PS5 they expose no telemetry (on PC they use Windows
@@ -45,6 +46,10 @@ Open the dashboard, pick a mode on **Data source** and press **Start**.
 - **F1:** choose season, race and driver. The first start downloads the data (one request at a time,
   OpenF1 is rate limited); later starts are offline. Pre-download from the command line:
   `npm run f1:fetch -w @racing/relay -- --year 2024`, then `-- --session <key> --driver <number>`.
+- **Recorded file:** on the **Open a recorded file** card pick `session.json` and `frames.bin` together
+  (or one `.ndjson.gz`). The relay converts it into a recording in `data/sessions`, so it also appears
+  under **Replay** later. Laps cut by a reset to the pits are kept but marked invalid; laps that start
+  in the pit lane are marked as pit laps.
 - Dashboard on another device (tablet next to the wheel): `VITE_RELAY_URL=http://<relay-ip>:8787 npm start`.
 
 ## Project layout
