@@ -115,10 +115,13 @@ export class Gt7Source implements TTelemetrySource {
 		const lap = this.lapTracker.push(frame, packet.lastLapMs);
 		if (lap) {
 			this.sink.lap(lap);
-			if (this.trackLength === null && lap.lapTimeMs > 0) {
-				// First full lap tells us the track length; from now on sectors can be split.
-				this.trackLength = Math.round(this.lastLapDistance ?? 0) || null;
-				if (this.trackLength) {
+			// The track length comes from two laps in a row that agree: one lap alone may have
+			// been joined midway, and a restart is not a lap at all.
+			if (this.trackLength === null && lap.isValid && this.lastLapDistance) {
+				const previous = this.validLapDistance;
+				this.validLapDistance = this.lastLapDistance;
+				if (previous && Math.abs(previous - this.lastLapDistance) <= previous * 0.03) {
+					this.trackLength = Math.round((previous + this.lastLapDistance) / 2);
 					this.lapTracker = new LapTracker(this.trackLength);
 					this.lapTracker.push(frame);
 					this.emitSession();
@@ -129,6 +132,7 @@ export class Gt7Source implements TTelemetrySource {
 	}
 
 	private lastLapDistance: number | null = null;
+	private validLapDistance: number | null = null;
 
 	private checkSilence(consoleIp: string): void {
 		if (this.isStreaming && Date.now() - this.lastPacketAt > GT7_SILENCE_TIMEOUT_MS) {

@@ -1,0 +1,34 @@
+@import 'src/ui/common/colors';
+@import 'src/ui/common/fonts';
+@import 'src/ui/common/boxStyles';
+
+.page_section {
+	@include flex-list;
+	gap: 12px;
+
+	& + & {
+		margin-top: 32px;
+	}
+}
+
+.section_header {
+	@include flex-list;
+	gap: 2px;
+
+	padding-bottom: 8px;
+
+	border-bottom: 1px solid $stroke_primary;
+}
+
+.section_title {
+	margin: 0;
+
+	@extend %font-headline-sm;
+}
+
+.section_hint {
+	margin: 0;
+
+	color: $text_secondary;
+	@extend %font-body-sm;
+}

@@ -25,6 +25,9 @@
 		"src/engines/racingMath/carProfiles.ts",
 		"src/engines/racingMath/weatherModel.ts",
 		"src/engines/racingMath/setupAdvisorModel.ts",
-		"src/engines/racingMath/sessionReportModel.ts"
+		"src/engines/racingMath/sessionReportModel.ts",
+		"src/engines/racingMath/sessionDetailModel.ts",
+		"src/engines/racingMath/lapQuality.ts",
+		"src/pages/analyst/analystFunctions.ts"
 	]
 }

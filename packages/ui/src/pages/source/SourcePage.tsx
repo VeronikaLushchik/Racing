@@ -48,7 +48,7 @@ const SourcePage: FC = () => {
 		(source: TSourceKind, options: TSourceOptions) => {
 			setReplayFile(options.file ?? '');
 			send({ type: 'selectSource', source, options });
-			history.push('/live/driver');
+			history.push('/driver');
 		},
 		[send, history],
 	);

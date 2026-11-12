@@ -59,3 +59,14 @@ test('mock weather warms the track and stays plausible', () => {
 	assert.equal(later.isRaining, false);
 	assert.equal(later.t, 30 * 60000);
 });
+
+test('lap tracker without a track length rejects restarts as laps', () => {
+	const tracker = new LapTracker(null);
+	tracker.push(frame(1, 0, 0));
+	tracker.push(frame(1, 2700, 60));
+	const restart = tracker.push(frame(2, 0, 0));
+	assert.equal(restart.isValid, false);
+	tracker.push(frame(2, 95000, 2490));
+	const real = tracker.push(frame(3, 0, 0), 95100);
+	assert.equal(real.isValid, true);
+});
