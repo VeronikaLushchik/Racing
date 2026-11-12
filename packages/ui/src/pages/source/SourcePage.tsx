@@ -6,6 +6,7 @@ import { TSourceKind, TSourceOptions } from '@racing/shared';
 import Button from '~@ui/Button/Button';
 import Field from '~@ui/Field/Field';
 import PageContent from '~@ui/PageContent/PageContent';
+import ImportCard from './ImportCard';
 import SourceCard from './SourceCard';
 
 import useTranslation from '~@engines/translations/useTranslation';
@@ -14,7 +15,7 @@ import useTelemetry, { useTelemetryMeta } from 'src/modules/telemetry/useTelemet
 import { useF1Drivers, useF1Sessions, useRecordings } from './sourceQueries';
 
 import { CONSOLE_IP_STORAGE_KEY } from 'src/constants/commonConstants';
-import { F1_SEASONS, PLAYBACK_RATES } from './sourceConstants';
+import { F1_SEASONS, PLAYBACK_RATES, REPLAY_RATES } from './sourceConstants';
 
 import classes from './source.module.scss';
 
@@ -32,6 +33,8 @@ const SourcePage: FC = () => {
 	const [mockRate, setMockRate] = useState(1);
 	const [recording, setRecording] = useState('');
 	const [replayRate, setReplayRate] = useState(1);
+	const [importRate, setImportRate] = useState(1);
+	const [replayFile, setReplayFile] = useState('');
 
 	const isRelayOnline = connection === 'open';
 	const { f1Sessions, isF1SessionsLoading, isF1SessionsError } = useF1Sessions(
@@ -43,6 +46,7 @@ const SourcePage: FC = () => {
 
 	const start = useCallback(
 		(source: TSourceKind, options: TSourceOptions) => {
+			setReplayFile(options.file ?? '');
 			send({ type: 'selectSource', source, options });
 			history.push('/live/driver');
 		},
@@ -58,13 +62,17 @@ const SourcePage: FC = () => {
 
 	const isActive = (kind: TSourceKind): boolean => relaySource === kind && relayState !== 'idle';
 
-	const rateSelect = (value: number, onChange: (rate: number) => void) => (
+	const rateSelect = (
+		value: number,
+		onChange: (rate: number) => void,
+		rates: number[] = PLAYBACK_RATES,
+	) => (
 		<Field label={t('common.speedRate')}>
 			<select
 				value={value}
 				onChange={event => onChange(Number(event.target.value))}
 			>
-				{PLAYBACK_RATES.map(rate => (
+				{rates.map(rate => (
 					<option
 						key={rate}
 						value={rate}
@@ -211,10 +219,18 @@ const SourcePage: FC = () => {
 					{rateSelect(mockRate, setMockRate)}
 				</SourceCard>
 
+				<ImportCard
+					isRelayOnline={isRelayOnline}
+					isActive={isActive('replay') && replayFile.startsWith('import-')}
+					onStart={file => start('replay', { file, rate: importRate })}
+				>
+					{rateSelect(importRate, setImportRate, REPLAY_RATES)}
+				</ImportCard>
+
 				<SourceCard
 					title={t('source.replayTitle')}
 					description={t('source.replayDescription')}
-					isActive={isActive('replay')}
+					isActive={isActive('replay') && !replayFile.startsWith('import-')}
 					canStart={isRelayOnline && recording !== ''}
 					onStart={() => start('replay', { file: recording, rate: replayRate })}
 				>
@@ -238,7 +254,7 @@ const SourcePage: FC = () => {
 							</select>
 						</Field>
 					)}
-					{rateSelect(replayRate, setReplayRate)}
+					{rateSelect(replayRate, setReplayRate, REPLAY_RATES)}
 				</SourceCard>
 			</div>
 		</PageContent>

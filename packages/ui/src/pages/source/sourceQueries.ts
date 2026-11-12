@@ -1,4 +1,6 @@
-import { useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+
+import { TImportResult } from '@racing/shared';
 
 import { apiFetch } from 'src/services/apiFetch';
 import { qs } from 'src/services/functions';
@@ -58,4 +60,25 @@ export const useRecordings = () => {
 	});
 
 	return { recordings: query.data ?? [], isRecordingsLoading: query.isLoading };
+};
+
+const uploadFiles = async (files: File[]) => {
+	const body = new FormData();
+	files.forEach(file => body.append('file', file, file.name));
+	return apiFetch.json<TImportResult>(API_PATHS.imports, { method: 'POST', body });
+};
+
+/** Uploads recorded files to the relay, which turns them into a recording for the replay. */
+export const useImportFiles = () => {
+	const queryClient = useQueryClient();
+	const mutation = useMutation<TImportResult, unknown, File[]>(uploadFiles, {
+		onSuccess: () => queryClient.invalidateQueries(recordingsQueryKey),
+	});
+
+	return {
+		importFiles: mutation.mutate,
+		importResult: mutation.data ?? null,
+		importError: mutation.error,
+		isImporting: mutation.isLoading,
+	};
 };

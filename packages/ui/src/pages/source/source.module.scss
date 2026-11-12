@@ -87,3 +87,20 @@
 	color: $system_dangerous;
 	@extend %font-body-sm;
 }
+
+.import_summary {
+	@include flex-list;
+	gap: 2px;
+
+	@extend %font-body-sm;
+}
+
+.import_title {
+	@extend %font-label-md;
+	font-weight: 600;
+}
+
+.import_note {
+	color: $text_secondary;
+	@extend %font-label-sm;
+}

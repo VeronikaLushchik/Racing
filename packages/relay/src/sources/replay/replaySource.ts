@@ -8,6 +8,8 @@ import { TServerMessage, TSourceOptions } from '@racing/shared';
 import { TSourceSink, TTelemetrySource } from '../sourceTypings';
 
 const TICK_MS = 16;
+/** Fast enough to skim an hour-long session in about a minute. */
+export const REPLAY_MAX_RATE = 64;
 
 /** Plays back a session recorded by the relay (data/sessions/*.ndjson.gz). */
 export class ReplaySource implements TTelemetrySource {
@@ -28,7 +30,7 @@ export class ReplaySource implements TTelemetrySource {
 		}
 
 		const messages = await readMessages(file);
-		const rate = Math.min(8, Math.max(0.25, this.options.rate ?? 1));
+		const rate = Math.min(REPLAY_MAX_RATE, Math.max(0.25, this.options.rate ?? 1));
 		let index = 0;
 		let clock = 0;
 
