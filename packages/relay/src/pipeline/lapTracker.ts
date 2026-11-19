@@ -14,6 +14,7 @@ export class LapTracker {
 	private lastFrame: TTelemetryFrame | null = null;
 	private sectorStarts: number[] = [];
 	private hasPitted = false;
+	private isCut = false;
 	private lapStartDistance = 0;
 
 	constructor(
@@ -23,6 +24,11 @@ export class LapTracker {
 
 	markPit(): void {
 		this.hasPitted = true;
+	}
+
+	/** The current lap broke the track limits: it is timed but does not count. */
+	markInvalid(): void {
+		this.isCut = true;
 	}
 
 	/** Feeds a frame; returns the summary of the lap that just ended, if any. */
@@ -53,6 +59,7 @@ export class LapTracker {
 		this.lapStartDistance = frame.lapDistance;
 		this.sectorStarts = [0];
 		this.hasPitted = false;
+		this.isCut = false;
 	}
 
 	private trackSectors(frame: TTelemetryFrame): void {
@@ -88,7 +95,7 @@ export class LapTracker {
 			lap: this.currentLap,
 			lapTimeMs: Math.round(lapTimeMs),
 			sectorsMs: sectorsMs.map(Math.round),
-			isValid: isComplete && !this.hasPitted,
+			isValid: isComplete && !this.hasPitted && !this.isCut,
 			isPitLap: this.hasPitted,
 			compound: null,
 		};

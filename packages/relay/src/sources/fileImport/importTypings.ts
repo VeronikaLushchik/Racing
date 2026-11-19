@@ -1,4 +1,4 @@
-import { TImportErrorKey, TImportNote, TServerMessage } from '@racing/shared';
+import { TImportChannel, TImportErrorKey, TImportNote, TServerMessage } from '@racing/shared';
 
 export interface TChannel {
 	values: Float64Array;
@@ -27,6 +27,8 @@ export interface TImportedSession {
 	bestLapMs: number | null;
 	trackLength: number | null;
 	notes: TImportNote[];
+	channels: TImportChannel[];
+	pitLaps: number;
 }
 
 /** An import failure the UI can translate by its key. */

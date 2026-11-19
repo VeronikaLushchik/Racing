@@ -134,8 +134,9 @@ export class RelayHub {
 	private createSink(kind: TSourceKind): TSourceSink {
 		const isCurrent = (): boolean => this.activeKind === kind;
 		const shouldRecord = kind === 'gt7' || kind === 'mock';
-		// A replay already paces its frames; at high speed every one is needed for lap analysis.
-		const shouldThrottle = kind !== 'replay';
+		// A replay and the demo already pace their frames; sped up, every one is needed for lap
+		// analysis.
+		const shouldThrottle = kind !== 'replay' && kind !== 'mock';
 
 		return {
 			session: session => {

@@ -6,7 +6,6 @@ import { TSourceKind, TSourceOptions } from '@racing/shared';
 import Button from '~@ui/Button/Button';
 import Field from '~@ui/Field/Field';
 import PageContent from '~@ui/PageContent/PageContent';
-import ImportCard from './ImportCard';
 import SourceCard from './SourceCard';
 
 import useTranslation from '~@engines/translations/useTranslation';
@@ -15,7 +14,7 @@ import useTelemetry, { useTelemetryMeta } from 'src/modules/telemetry/useTelemet
 import { useF1Drivers, useF1Sessions, useRecordings } from './sourceQueries';
 
 import { CONSOLE_IP_STORAGE_KEY } from 'src/constants/commonConstants';
-import { F1_SEASONS, PLAYBACK_RATES, REPLAY_RATES } from './sourceConstants';
+import { DEMO_RACE_LAPS, F1_SEASONS, PLAYBACK_RATES, REPLAY_RATES } from './sourceConstants';
 
 import classes from './source.module.scss';
 
@@ -31,9 +30,9 @@ const SourcePage: FC = () => {
 	const [driverNumber, setDriverNumber] = useState<number | null>(null);
 	const [f1Rate, setF1Rate] = useState(1);
 	const [mockRate, setMockRate] = useState(1);
+	const [raceLaps, setRaceLaps] = useState(DEMO_RACE_LAPS[1]);
 	const [recording, setRecording] = useState('');
 	const [replayRate, setReplayRate] = useState(1);
-	const [importRate, setImportRate] = useState(1);
 	const [replayFile, setReplayFile] = useState('');
 
 	const isRelayOnline = connection === 'open';
@@ -214,18 +213,45 @@ const SourcePage: FC = () => {
 					description={t('source.mockDescription')}
 					isActive={isActive('mock')}
 					canStart={isRelayOnline}
-					onStart={() => start('mock', { rate: mockRate })}
+					onStart={() => start('mock', { rate: mockRate, raceLaps })}
 				>
-					{rateSelect(mockRate, setMockRate)}
+					<Field
+						label={t('source.raceLaps')}
+						hint={t('source.raceLapsHint')}
+					>
+						<select
+							value={raceLaps}
+							onChange={event => setRaceLaps(Number(event.target.value))}
+						>
+							{DEMO_RACE_LAPS.map(laps => (
+								<option
+									key={laps}
+									value={laps}
+								>
+									{t('source.lapsCount', laps)}
+								</option>
+							))}
+						</select>
+					</Field>
+					{rateSelect(mockRate, setMockRate, REPLAY_RATES)}
 				</SourceCard>
 
-				<ImportCard
-					isRelayOnline={isRelayOnline}
-					isActive={isActive('replay') && replayFile.startsWith('import-')}
-					onStart={file => start('replay', { file, rate: importRate })}
+				<section
+					className={classes.source_card}
+					data-is-active={isActive('replay') && replayFile.startsWith('import-')}
 				>
-					{rateSelect(importRate, setImportRate, REPLAY_RATES)}
-				</ImportCard>
+					<header className={classes.card_header}>
+						<h2 className={classes.card_title}>{t('source.importTitle')}</h2>
+					</header>
+					<p className={classes.card_description}>{t('source.importDescription')}</p>
+					<div className={classes.card_form} />
+					<Button
+						variant="secondary"
+						onClick={() => history.push('/upload')}
+					>
+						{t('source.toUpload')}
+					</Button>
+				</section>
 
 				<SourceCard
 					title={t('source.replayTitle')}
