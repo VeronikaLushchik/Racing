@@ -4,13 +4,12 @@
 	"private": true,
 	"main": "dist/index.js",
 	"scripts": {
-		"prebuild": "npm run build --prefix ../shared",
-		"build": "tsc -p tsconfig.json",
+		"build": "tsc -p ../shared/tsconfig.json && tsc -p tsconfig.json",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
-		"start": "npm run build && node dist/index.js",
-		"fake-gt7": "npm run build && node dist/tools/fakeGt7Console.js",
-		"f1:fetch": "npm run build && node dist/tools/fetchF1Session.js",
-		"test:unit": "npm run build && node --test scripts/*.test.cjs"
+		"start": "tsc -p ../shared/tsconfig.json && tsc -p tsconfig.json && node dist/index.js",
+		"fake-gt7": "tsc -p ../shared/tsconfig.json && tsc -p tsconfig.json && node dist/tools/fakeGt7Console.js",
+		"f1:fetch": "tsc -p ../shared/tsconfig.json && tsc -p tsconfig.json && node dist/tools/fetchF1Session.js",
+		"test:unit": "tsc -p ../shared/tsconfig.json && tsc -p tsconfig.json && node --test scripts/*.test.cjs"
 	},
 	"dependencies": {
 		"@racing/shared": "0.1.0",
