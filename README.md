@@ -10,8 +10,8 @@ degradation, pit window, setup advice and a post-session debrief. The UI speaks 
 ```
 Gran Turismo 7 (PS5, UDP + Salsa20) ──┐
 OpenF1 historical F1 races ───────────┤
-Demo circuit (synthetic) ─────────────┤
-Recorded files (GT7 / Assetto Corsa) ─┼──► relay (Node.js) ──WebSocket──► dashboard (React + ECharts)
+Demo race (simulated GT3 race) ───────┤
+Uploaded raw data (CSV, recorder) ────┼──► relay (Node.js) ──WebSocket──► dashboard (React + ECharts)
 Relay recordings (replay) ────────────┘        │                              │
                                                └── data/sessions/*.ndjson.gz  └── laps in IndexedDB
 ```
@@ -27,8 +27,8 @@ is in [docs/race-telemetry-uk.pdf](docs/race-telemetry-uk.pdf).
 | --- | --- | --- |
 | **Gran Turismo 7** | PS5/PS4 in the same LAN. The relay sends a heartbeat to UDP 33739 and decrypts the Salsa20 packets arriving on 33740 (~60 Hz). | Speed, RPM, gear, pedals, steering, position, wheel speeds, suspension travel, tyre temps (one per tyre), water/oil temps, fuel, laps. G-forces and lap distance are derived. |
 | **Formula 1, real races** | [OpenF1](https://openf1.org) historical API (free, no key). One driver's race is downloaded once, cached in `data/f1/cache`, and replayed as if live. | Speed, RPM, gear, throttle, brake on/off, position on track, laps with sectors, tyre compounds, weather, the whole field with gaps. |
-| **Demo circuit** | Built-in simulator on a fictional 3.8 km circuit with nine rivals and changing weather. | Every channel, including tyre zones, brake temps and wear. Works anywhere. |
-| **Open a recorded file** | A session from the telemetry recorder (`session.json` + `frames.bin`, GT7 or Assetto Corsa), or a relay recording (`.ndjson.gz`) from another computer. | Every channel in the file: laps with sectors, track map, ghost lap, the full debrief. |
+| **Demo race** | Built-in race simulation: a GT3 sprint (10/20/30 laps) on a fictional 3.8 km circuit, nine rivals on their own pit strategies, weather that changes, a chequered flag. Plays at up to ×64, so a 20-lap race takes about half a minute. | Every channel, with the shapes and trends of real driving (see [Demo race](#demo-race)). Works anywhere. |
+| **Upload race data** | Raw files on the **Upload data** page: CSV/TSV logs (raw GT7 60 Hz loggers, MoTeC, SimHub, Second Monitor exports), the telemetry recorder's `session.json` + `frames.bin` (GT7, Assetto Corsa), or a relay recording (`.ndjson.gz`). | Every channel in the file: laps with sectors, pit stops, track map, ghost lap, the full debrief. |
 | **Replay** | Sessions the relay recorded (live GT7, demo, imported files). | Whatever the original source had. |
 
 Each source announces its capabilities, so panels a source cannot fill are hidden or say so.
@@ -43,7 +43,7 @@ Pages are cut by who reads them, and each page stacks its sections instead of hi
 
 Speed, pedals, gear and RPM traces (10/30/60 s window, mouse-wheel zoom and pan), live readout with
 the delta to the best lap, pedal bars, G-G diagram (last 6 s) and a mini track map with the car on
-it. Replays play at up to ×64, F1 races up to ×16 and the demo up to ×8.
+it. Replays and the demo race play at up to ×64, F1 races up to ×16.
 
 **Video overlay export:** any recorded lap can be exported as a real-time WebM (VP9 with alpha,
 1920 × 640, or on a green screen) or as a PNG, to lay over the onboard video of that lap.
@@ -94,10 +94,59 @@ it. Replays play at up to ×64, F1 races up to ×16 and the demo up to ×8.
 
 ### Data source
 
-Pick a source, start and stop it, open a recorded file, pick a replay. The playback speed of every
-non-live source is changed on the Driver page.
+Pick a source, start and stop it, pick a replay. The playback speed of every non-live source is
+changed on the Driver page.
 
-![Open a recorded file](docs/screenshots/open-recorded-file.png)
+### Upload data
+
+A page of its own for raw race data. Drop the files (or click to choose); the page shows what each
+file looks like, uploads with a progress bar and then reports what the relay found: valid laps, best
+lap, pit laps, track length, samples, and which channels the file has, each with what it fills on the
+dashboards (hover a channel). **Watch on the Driver page** replays it at the chosen speed, **Open the
+analysis** plays it at ×64 straight into the Analyst page. Earlier uploads are listed and open again
+without uploading twice.
+
+How raw logs are read:
+
+- **CSV / TSV** with a header row; metadata lines above it (`Venue,Magione`), a units row under it and
+  units in brackets (`Speed [km/h]`) are understood, and so is gzip. Column names are matched by
+  aliases (`t_s`/`time`, `speed_ms`/`speed`, `x`/`z` or `x`/`y`, `last_lap_ms`, `tyre_fl`,
+  `wheel_fl`…), units by name or size: pedals as 0–1, % or 0–255 bytes, yaw rate in °/s or rad/s.
+- **Laps** come from the lap counter, the lap position, or, without one, from where the car crosses
+  the line: a log that starts and ends on the line keeps its first and last laps, and a single closed
+  lap logged with the counter at 0 (a teammate's best lap) counts as lap 1.
+- **Pit stops**: fuel going up or the car standing still for 8 s marks a pit lap.
+- **Packet loss**: a gap where the car moved as far as its speed says is bridged, not treated as a reset.
+- **Lateral G** without a G channel comes from speed × yaw rate, else from the change of heading.
+
+For example the course file `race_gt7.csv` (12-lap GT7 race at 60 Hz) reads as 12 laps, best 1:26.005,
+laps 6–7 marked as the pit stop, track 3.87 km.
+
+![Upload data](docs/screenshots/upload-page.png)
+
+## Demo race
+
+The demo is a small race simulation rather than a scripted loop, so every page has data that behaves
+like real driving:
+
+- **Car:** a point mass with a friction circle, downforce (+40% grip at 270 km/h), drag and a 290 W/kg
+  power curve. Each lap's speed profile comes from the corner limit, a forward pass for traction and
+  a backward pass for braking, so the traces show trail braking into the apex, progressive throttle
+  on exit and a gear/RPM sawtooth from a six-speed gearbox.
+- **Driver:** consistent habits a coach would spot (one corner braked early, one taken too slowly, one
+  where pace comes and goes), lap-to-lap noise, a slow first lap, and occasional mistakes: lock-ups,
+  running wide, a trip over the kerbs that invalidates the lap.
+- **Tyres and fuel:** tyres warm up from 48 °C, heat with load and slip, wear faster when overheated
+  and lose grip with wear and temperature, so lap times fade and temperatures creep up over a stint;
+  fuel burns ~2.7 L a lap and its weight costs about 0.03 s per litre. Brakes heat to 550–650 °C at the
+  front; suspension shows aero squat, pitch, roll, bumps and kerbs.
+- **Race:** one pit stop at half distance (24 s in the box, 60 km/h pit lane) from mediums to softs,
+  nine rivals with their own pace, compounds, degradation and stop laps, standing start, positions and
+  gaps, and a chequered flag that ends the session and opens the session report.
+- **Weather:** the sun heats the track for a quarter of an hour, then clouds cool it by several
+  degrees while humidity and wind rise.
+
+![Demo race, Car page](docs/screenshots/demo-race-car.png)
 
 ## How laps are kept honest
 
@@ -129,9 +178,11 @@ Open the dashboard, pick a source on **Data source** and press **Start**.
 - **F1:** choose season, race and driver. The first start downloads the data (one request at a time,
   OpenF1 is rate limited); later starts are offline. Pre-download from the command line:
   `npm run f1:fetch -w @racing/relay -- --year 2024`, then `-- --session <key> --driver <number>`.
-- **Recorded file:** on the **Open a recorded file** card pick `session.json` and `frames.bin` together
-  (or one `.ndjson.gz`). The relay converts it into a recording in `data/sessions`, so it also appears
-  under **Replay** later.
+- **Demo race:** pick the race length and speed on the **Demo race** card; at ×64 a 20-lap race is
+  over in about 30 s and the session report is ready.
+- **Raw data:** open **Upload data**, drop a CSV log, `session.json` + `frames.bin`, or a `.ndjson.gz`.
+  The relay converts it into a recording in `data/sessions` (listed under **Uploaded before** and
+  **Replay**). The relay also answers `GET /api/imports` with the list of uploads.
 - Dashboard on another device (tablet next to the wheel): `VITE_RELAY_URL=http://<relay-ip>:8787 npm start`.
 
 ## Project layout
@@ -150,6 +201,10 @@ Key places:
 
 - `relay/src/sources/*` — every source turns its data into `TTelemetryFrame` (`shared/src/telemetryTypings.ts`).
 - `relay/src/sources/gt7/` — heartbeat, Salsa20 decryption, packet parsing, derived G and lap distance.
+- `relay/src/sources/mock/` — the demo race: track and car physics (`mockTrack`), driver (`mockDriver`),
+  tyres, brakes, fuel and suspension (`mockCar`), rivals (`mockField`), weather (`mockWeather`).
+- `relay/src/sources/fileImport/` — uploads: CSV reader (`csvFile`), recorder files (`rtlgFile`), and
+  `importedSession`, which turns any table of channels into laps, pit laps and frames.
 - `ui/src/modules/telemetry/telemetryStore.ts` — frames go into a typed-array ring buffer; charts read
   it on their own timer, React subscribes only to throttled values.
 - `ui/src/engines/racingMath/` — all the maths, as pure functions: delta, distance resampling, lap
