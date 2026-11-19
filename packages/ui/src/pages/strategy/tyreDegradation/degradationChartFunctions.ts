@@ -9,6 +9,7 @@ interface TLabels {
 	lapTime: string;
 	fit: string;
 	forecast: string;
+	outlier: string;
 	band: string;
 	lap: string;
 }
@@ -21,24 +22,17 @@ interface TTooltipParam {
 }
 
 /**
- * Lap time against lap number: measured laps as dots, the fitted trend over the laps used for
- * the fit, and the forecast between the dotted edges of its prediction band.
+ * Lap time against lap number: measured laps as dots, laps the filter dropped as crosses, the
+ * smoothed Kalman trend, and the forecast between the dotted edges of its prediction band.
  */
 export const buildDegradationOption = (
 	result: TDegradationResult,
 	theme: TColorScheme,
 	labels: TLabels,
 ): EChartsCoreOption => {
-	const { stint, fitLaps, fit, forecast } = result;
-	const lastFit = fitLaps[fitLaps.length - 1];
-	const firstFit = fitLaps[0];
-	const lapAtAge = (age: number) => lastFit.lap + (age - lastFit.tyreAge);
-	const trendAt = (age: number) => {
-		const lap = stint.find(item => item.tyreAge === age);
-		const fuel = lap?.fuelL ?? null;
-		const offset = lap && fuel !== null ? lap.lapTimeS - lap.correctedS : 0;
-		return fit.intercept + fit.slope * age + offset;
-	};
+	const { stint, trend, forecast, outlierLaps } = result;
+	const lastLap = stint[stint.length - 1];
+	const outliers = new Set(outlierLaps);
 
 	const values = [
 		...stint.map(lap => lap.lapTimeS),
@@ -84,7 +78,7 @@ export const buildDegradationOption = (
 			type: 'value',
 			minInterval: 1,
 			min: stint[0].lap,
-			max: forecast[forecast.length - 1]?.lap ?? lastFit.lap,
+			max: forecast[forecast.length - 1]?.lap ?? lastLap.lap,
 			axisLine,
 			axisTick: { show: false },
 			splitLine: { show: false },
@@ -121,7 +115,7 @@ export const buildDegradationOption = (
 				showSymbol: false,
 				lineStyle: { color: theme['--chart-ghost'], width: 1.5, type: 'dashed' },
 				itemStyle: { color: theme['--chart-ghost'] },
-				data: [firstFit.tyreAge, lastFit.tyreAge].map(age => [lapAtAge(age), trendAt(age)]),
+				data: trend.map(lap => [lap.lap, lap.lapTimeS]),
 			},
 			{
 				id: 'forecast',
@@ -139,7 +133,24 @@ export const buildDegradationOption = (
 				type: 'scatter',
 				symbolSize: 8,
 				itemStyle: { color: theme['--chart-speed'] },
-				data: stint.map(lap => [lap.lap, lap.lapTimeS]),
+				data: stint
+					.filter(lap => !outliers.has(lap.lap))
+					.map(lap => [lap.lap, lap.lapTimeS]),
+			},
+			{
+				id: 'outliers',
+				name: labels.outlier,
+				type: 'scatter',
+				symbol: 'path://M0,0 L10,10 M10,0 L0,10',
+				symbolSize: 9,
+				itemStyle: {
+					color: 'transparent',
+					borderColor: theme['--chart-brake'],
+					borderWidth: 2,
+				},
+				data: stint
+					.filter(lap => outliers.has(lap.lap))
+					.map(lap => [lap.lap, lap.lapTimeS]),
 			},
 		],
 	};

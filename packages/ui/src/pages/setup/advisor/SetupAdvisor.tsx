@@ -16,7 +16,10 @@ import {
 	balanceState,
 	CORNER_PHASES,
 	MIN_SAMPLES,
+	understeerGradient,
 } from '~@engines/racingMath/setupAdvisorModel';
+
+import { NEUTRAL_GRADIENT_DEG } from '../common/setupConstants';
 
 import classes from '../common/setup.module.scss';
 
@@ -34,9 +37,29 @@ const SetupAdvisor: FC = () => {
 			adviseSetup(evidence, setup?.values ?? null, {
 				tyreWindowC: profile.tyreWindowC,
 				trackTempC: weather.trackTempC,
+				wheelbaseM: profile.wheelbaseM,
 			}),
 		[evidence, setup, profile, weather.trackTempC],
 	);
+	const gradient = useMemo(
+		() => understeerGradient(evidence.steering, profile.wheelbaseM),
+		[evidence, profile.wheelbaseM],
+	);
+	const formatGradient = (value: number | null | undefined) =>
+		value === null || value === undefined
+			? '—'
+			: `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(2)}°/G`;
+	// Mild understeer is how most cars are set up; colour only what stands out.
+	const gradientState = (value: number | null | undefined) => {
+		if (value === null || value === undefined) return 'unknown';
+		if (Math.abs(value) < NEUTRAL_GRADIENT_DEG) return 'neutral';
+		return value > 0 ? 'understeer' : 'oversteer';
+	};
+	const gradientCells: { key: string; value: number | null | undefined }[] = [
+		{ key: 'all', value: gradient?.degPerG },
+		{ key: 'slow', value: gradient?.slowDegPerG },
+		{ key: 'fast', value: gradient?.fastDegPerG },
+	];
 
 	const capabilities = session?.capabilities;
 	const cornerSamples = CORNER_PHASES.reduce(
@@ -83,6 +106,43 @@ const SetupAdvisor: FC = () => {
 								);
 							})}
 						</div>
+					</Panel>
+
+					<Panel
+						title={t('setup.gradientTitle')}
+						subtitle={t('setup.gradientHint', profile.wheelbaseM)}
+					>
+						<div className={classes.phases}>
+							{gradientCells.map(cell => (
+								<div
+									key={cell.key}
+									className={classes.phase}
+									data-balance={gradientState(cell.value)}
+								>
+									<span className={classes.phase_label}>
+										{t(`setup.gradient.${cell.key}` as TTranslationKey)}
+									</span>
+									<strong className={classes.phase_value}>
+										{formatGradient(cell.value)}
+									</strong>
+								</div>
+							))}
+						</div>
+						<p className={classes.muted}>
+							{!gradient
+								? t('setup.gradientNeedData')
+								: gradient.characteristicKmh !== null
+									? t(
+											'setup.gradientCharacteristic',
+											Math.round(gradient.characteristicKmh),
+										)
+									: gradient.criticalKmh !== null
+										? t(
+												'setup.gradientCritical',
+												Math.round(gradient.criticalKmh),
+											)
+										: t('setup.gradientNeutral')}
+						</p>
 					</Panel>
 
 					<Panel

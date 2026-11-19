@@ -25,6 +25,10 @@ export interface TCarProfile {
 	pitLossS: number;
 	/** Time lost on the out-lap while new tyres come up to temperature, s. */
 	warmUpLossS: number;
+	/** Wheelbase, m: turns steering into the road-wheel understeer gradient. */
+	wheelbaseM: number;
+	/** Chance a safety car starts on any lap, 0..1. Sims without one use 0. */
+	safetyCarChance: number;
 }
 
 export const CAR_PROFILES: Record<TCarProfileId, TCarProfile> = {
@@ -34,6 +38,8 @@ export const CAR_PROFILES: Record<TCarProfileId, TCarProfile> = {
 		tyreWindowC: { min: 80, max: 105 },
 		pitLossS: DEFAULT_PIT_LOSS_S,
 		warmUpLossS: WARM_UP_LOSS_S,
+		wheelbaseM: 2.7,
+		safetyCarChance: 0,
 	},
 	f1: {
 		id: 'f1',
@@ -42,6 +48,9 @@ export const CAR_PROFILES: Record<TCarProfileId, TCarProfile> = {
 		tyreWindowC: { min: 90, max: 115 },
 		pitLossS: 21,
 		warmUpLossS: 1.5,
+		wheelbaseM: 3.6,
+		// About one safety car or VSC per race of 55–70 laps.
+		safetyCarChance: 0.015,
 	},
 	road: {
 		id: 'road',
@@ -49,6 +58,8 @@ export const CAR_PROFILES: Record<TCarProfileId, TCarProfile> = {
 		tyreWindowC: { min: 60, max: 90 },
 		pitLossS: 25,
 		warmUpLossS: 0.5,
+		wheelbaseM: 2.6,
+		safetyCarChance: 0,
 	},
 };
 

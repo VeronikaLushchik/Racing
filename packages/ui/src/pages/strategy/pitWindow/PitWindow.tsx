@@ -3,16 +3,23 @@ import React, { FC, useEffect, useMemo, useState } from 'react';
 import Field from '~@ui/Field/Field';
 import Panel from '~@ui/Panel/Panel';
 import PitRibbon from './PitRibbon';
+import StrategySimulation from './StrategySimulation';
 
 import useTranslation from '~@engines/translations/useTranslation';
-import { predictRejoin, undercutGain, undercutTarget } from '~@engines/racingMath/pitWindowModel';
+import {
+	predictRejoin,
+	undercutChance,
+	undercutGain,
+	undercutTarget,
+} from '~@engines/racingMath/pitWindowModel';
+import { simulateStrategy, TStopOption } from '~@engines/racingMath/strategySimulationModel';
 import { useCarProfile } from 'src/modules/carProfile/carProfile';
 import { useTelemetryMeta } from 'src/modules/telemetry/useTelemetry';
 import useDegradation from '../common/useDegradation';
 import { formatSigned } from '../common/strategyFunctions';
 
 import { MIN_FIT_LAPS } from '~@engines/racingMath/tyreDegradationModel';
-import { MAX_DELAY_LAPS } from '../common/strategyConstants';
+import { DEFAULT_LAPS_LEFT, MAX_DELAY_LAPS, MAX_LAPS_LEFT } from '../common/strategyConstants';
 
 import classes from '../common/strategy.module.scss';
 
@@ -24,9 +31,12 @@ const PitWindow: FC = () => {
 	const profile = useCarProfile();
 	const [pitLossS, setPitLossS] = useState<number>(profile.pitLossS);
 	const [delayLaps, setDelayLaps] = useState<number>(3);
+	const [lapsLeft, setLapsLeft] = useState<number>(DEFAULT_LAPS_LEFT);
+	const [safetyCarPct, setSafetyCarPct] = useState<number>(profile.safetyCarChance * 100);
 
-	// A different car class brings its own pit-lane time; the field stays editable.
+	// A different car class brings its own pit-lane time and safety car odds; both stay editable.
 	useEffect(() => setPitLossS(profile.pitLossS), [profile.pitLossS]);
+	useEffect(() => setSafetyCarPct(profile.safetyCarChance * 100), [profile.safetyCarChance]);
 
 	const hasOpponents = (session?.capabilities.hasOpponents ?? false) && field.length > 1;
 	const player = field.find(entry => entry.isPlayer);
@@ -45,6 +55,44 @@ const PitWindow: FC = () => {
 		degradation && tyreAge !== null && hasOpponents
 			? undercutTarget(field, degradation.degradationS, tyreAge, profile.warmUpLossS)
 			: null;
+
+	const chance =
+		degradation && tyreAge !== null && target
+			? undercutChance(
+					degradation.degradationS,
+					degradation.degradationSigma,
+					tyreAge,
+					delayLaps,
+					target.intervalS,
+					profile.warmUpLossS,
+				)
+			: null;
+
+	const simulation = useMemo(
+		() =>
+			degradation
+				? simulateStrategy({
+						state: degradation.state,
+						noiseS: degradation.noiseS,
+						lapsRemaining: lapsLeft,
+						pitLossS,
+						warmUpLossS: profile.warmUpLossS,
+						safetyCarChance: safetyCarPct / 100,
+					})
+				: null,
+		[degradation, lapsLeft, pitLossS, profile.warmUpLossS, safetyCarPct],
+	);
+	const lastLap = stint?.[stint.length - 1].lap ?? 0;
+	const runnerUp = simulation
+		? simulation.options
+				.filter(option => option !== simulation.best)
+				.reduce<TStopOption | null>(
+					(acc, option) => (!acc || option.meanS < acc.meanS ? option : acc),
+					null,
+				)
+		: null;
+	const bestLapText = (stopIn: number, isNoStop: boolean) =>
+		isNoStop ? t('simulation.noStop') : t('simulation.lap', lastLap + stopIn);
 
 	const neighbourText = (gapS: number | undefined) =>
 		gapS === undefined ? '—' : `${gapS.toFixed(1)} s`;
@@ -98,6 +146,46 @@ const PitWindow: FC = () => {
 								max={MAX_DELAY_LAPS}
 								value={delayLaps}
 								onChange={event => setDelayLaps(Number(event.target.value))}
+							/>
+						</Field>
+						<Field
+							label={t('simulation.lapsLeft')}
+							hint={t('simulation.lapsLeftHint')}
+						>
+							<input
+								type="number"
+								min={2}
+								max={MAX_LAPS_LEFT}
+								step={1}
+								value={lapsLeft}
+								onChange={event => {
+									const value = Math.round(Number(event.target.value));
+									if (
+										Number.isFinite(value) &&
+										value >= 2 &&
+										value <= MAX_LAPS_LEFT
+									) {
+										setLapsLeft(value);
+									}
+								}}
+							/>
+						</Field>
+						<Field
+							label={t('simulation.safetyCar')}
+							hint={t('simulation.safetyCarHint')}
+						>
+							<input
+								type="number"
+								min={0}
+								max={20}
+								step={0.5}
+								value={safetyCarPct}
+								onChange={event => {
+									const value = Number(event.target.value);
+									if (Number.isFinite(value) && value >= 0 && value <= 20) {
+										setSafetyCarPct(value);
+									}
+								}}
 							/>
 						</Field>
 					</div>
@@ -160,6 +248,11 @@ const PitWindow: FC = () => {
 								tyreAge ?? 0,
 							)}
 						</p>
+						{target && chance !== null && target.lapsNeeded !== null && (
+							<p className={classes.empty_hint}>
+								{t('pit.chance', Math.round(chance * 100), delayLaps)}
+							</p>
+						)}
 						{target && (
 							<p className={classes.text}>
 								{target.lapsNeeded === null
@@ -181,6 +274,78 @@ const PitWindow: FC = () => {
 					</div>
 				)}
 			</Panel>
+
+			<Panel
+				title={t('simulation.title')}
+				subtitle={
+					simulation
+						? t(
+								'simulation.hint',
+								simulation.runs,
+								(degradation?.noiseS ?? 0).toFixed(2),
+							)
+						: undefined
+				}
+				className={simulation ? classes.chart_panel : undefined}
+			>
+				{!simulation ? (
+					<p className={classes.empty_text}>{t('pit.needDegradation', MIN_FIT_LAPS)}</p>
+				) : (
+					<StrategySimulation
+						result={simulation}
+						lastLap={lastLap}
+						ariaLabel={t('simulation.title')}
+					/>
+				)}
+			</Panel>
+
+			{simulation && (
+				<div className={classes.stats}>
+					<div className={classes.stat}>
+						<span className={classes.stat_label}>{t('simulation.best')}</span>
+						<strong
+							className={classes.stat_value}
+							data-tone="good"
+						>
+							{bestLapText(simulation.best.stopIn, simulation.best.isNoStop)}
+						</strong>
+						<span className={classes.stat_hint}>
+							{runnerUp
+								? t(
+										'simulation.runnerUp',
+										bestLapText(runnerUp.stopIn, runnerUp.isNoStop),
+										runnerUp.meanS.toFixed(1),
+									)
+								: ''}
+						</span>
+					</div>
+					<div className={classes.stat}>
+						<span className={classes.stat_label}>{t('simulation.bestShare')}</span>
+						<strong className={classes.stat_value}>
+							{Math.round(simulation.best.bestShare * 100)}%
+						</strong>
+						<span className={classes.stat_hint}>{t('simulation.bestShareHint')}</span>
+					</div>
+					<div className={classes.stat}>
+						<span className={classes.stat_label}>{t('simulation.vsNoStop')}</span>
+						<strong className={classes.stat_value}>
+							{simulation.noStop && !simulation.best.isNoStop
+								? `−${simulation.noStop.meanS.toFixed(1)} s`
+								: '—'}
+						</strong>
+						<span className={classes.stat_hint}>{t('simulation.vsNoStopHint')}</span>
+					</div>
+					<div className={classes.stat}>
+						<span className={classes.stat_label}>{t('simulation.safetyCarRuns')}</span>
+						<strong className={classes.stat_value}>
+							{Math.round(simulation.safetyCarShare * 100)}%
+						</strong>
+						<span className={classes.stat_hint}>
+							{t('simulation.safetyCarRunsHint')}
+						</span>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };

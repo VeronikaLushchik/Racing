@@ -149,3 +149,76 @@ test('the summary object is reused until new data arrives, and reset clears it',
 	assert.equal(collector.summary().frames, 0);
 	assert.equal(collector.summary().calibrationSamples, 0);
 });
+
+const { understeerGradient } = require('../.test-dist/ui/src/engines/racingMath/setupAdvisorModel');
+
+/** Steering from the bicycle model: δ = c₁·κ + c₂·a_y, with c₂ depending on speed band. */
+const bicycleFrame = (speed, gLat, c1, c2) => {
+	const v = speed / 3.6;
+	const curvature = (gLat * G) / (v * v);
+	return frame({ speed, gLat, steer: c1 * curvature + c2 * gLat });
+};
+
+test('least squares recovers the understeer gradient and characteristic speed', () => {
+	const collector = new SetupEvidenceCollector();
+	const c1 = 30;
+	const c2 = 0.02;
+	[60, 90, 130, 180, 220].forEach(speed => {
+		[0.3, 0.6, 0.9, -0.5].forEach(gLat => {
+			for (let i = 0; i < 40; i += 1) collector.push(bicycleFrame(speed, gLat, c1, c2));
+		});
+	});
+	const fit = collector.summary().steering;
+	assert.ok(Math.abs(fit.c1 - c1) < 1e-6, fit.c1);
+	assert.ok(Math.abs(fit.c2 - c2) < 1e-9, fit.c2);
+	const gradient = understeerGradient(fit, 2.7);
+	// K = L·c₂/c₁ rad per G.
+	const kRad = (2.7 * c2) / c1;
+	assert.ok(Math.abs(gradient.degPerG - (kRad * 180) / Math.PI) < 1e-6);
+	assert.ok(Math.abs(gradient.characteristicKmh - Math.sqrt((2.7 * G) / kRad) * 3.6) < 1e-6);
+	assert.equal(gradient.criticalKmh, null);
+	// Same gradient at every speed: no aero advice.
+	assert.ok(Math.abs(gradient.fastDegPerG - gradient.slowDegPerG) < 1e-6);
+	assert.ok(
+		!adviseSetup(collector.summary(), null, context).some(a => a.id.startsWith('highSpeed')),
+	);
+});
+
+test('understeer that grows with speed is an aero balance problem', () => {
+	const collector = new SetupEvidenceCollector();
+	[60, 80, 100, 180, 220].forEach(speed => {
+		const c2 = speed > 160 ? 0.3 : 0.05;
+		[0.4, 0.8, -0.6].forEach(gLat => {
+			for (let i = 0; i < 120; i += 1) collector.push(bicycleFrame(speed, gLat, 30, c2));
+		});
+	});
+	const advice = adviseSetup(collector.summary(), { downforceF: 300, downforceR: 500 }, context);
+	const aero = advice.find(item => item.id === 'highSpeedUndersteer');
+	assert.ok(aero, JSON.stringify(advice.map(item => item.id)));
+	assert.equal(aero.metric, 'degPerG');
+	assert.ok(aero.value > 0);
+	assert.deepEqual(
+		aero.changes.map(change => [change.field, change.to]),
+		[
+			['downforceF', 325],
+			['downforceR', 475],
+		],
+	);
+});
+
+test('an oversteering car gets a critical speed, and one speed cannot be fitted', () => {
+	const collector = new SetupEvidenceCollector();
+	[70, 120, 200].forEach(speed => {
+		[0.5, 0.9].forEach(gLat => {
+			for (let i = 0; i < 100; i += 1) collector.push(bicycleFrame(speed, gLat, 30, -0.01));
+		});
+	});
+	const gradient = understeerGradient(collector.summary().steering, 2.7);
+	assert.ok(gradient.degPerG < 0);
+	assert.ok(gradient.criticalKmh > 0);
+	assert.equal(gradient.characteristicKmh, null);
+
+	const single = new SetupEvidenceCollector();
+	feed(single, 600, { speed: 120, gLat: 0.6 });
+	assert.equal(single.summary().steering, null);
+});

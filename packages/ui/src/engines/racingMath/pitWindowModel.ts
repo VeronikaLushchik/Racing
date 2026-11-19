@@ -106,3 +106,37 @@ export const undercutTarget = (
 		lapsNeeded: perLap > 0 ? Math.ceil((intervalS + warmUpLossS) / perLap) : null,
 	};
 };
+
+/** Standard normal CDF (Abramowitz–Stegun 7.1.26, error below 1.5e-7). */
+export const normalCdf = (x: number): number => {
+	const z = Math.abs(x) / Math.SQRT2;
+	const t = 1 / (1 + 0.3275911 * z);
+	const poly =
+		t *
+		(0.254829592 +
+			t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+	const erf = 1 - poly * Math.exp(-z * z);
+	return x >= 0 ? (1 + erf) / 2 : (1 - erf) / 2;
+};
+
+/**
+ * Chance the undercut passes a car `intervalS` ahead when the rival stays out `laps` laps.
+ * The gain `laps · d · tyreAge − warm-up` is linear in the degradation rate d, and the filter
+ * gives d ~ N(μ, σ²), so the gain is normal too: P = Φ((laps·μ·age − w − interval) / (laps·age·σ)).
+ */
+export const undercutChance = (
+	rateS: number,
+	rateSigma: number,
+	tyreAge: number,
+	laps: number,
+	intervalS: number,
+	warmUpLossS = WARM_UP_LOSS_S,
+): number => {
+	const scale = laps * tyreAge;
+	const margin = scale * rateS - warmUpLossS - intervalS;
+	const spread = scale * rateSigma;
+	if (spread <= 1e-9) {
+		return margin > 0 ? 1 : 0;
+	}
+	return normalCdf(margin / spread);
+};

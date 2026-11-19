@@ -34,6 +34,7 @@ const DegradationChart: FC<DegradationChartProps> = props => {
 				lapTime: t('degradation.lapTime'),
 				fit: t('degradation.trend'),
 				forecast: t('degradation.forecast'),
+				outlier: t('degradation.outlier'),
 				band: t('degradation.band'),
 				lap: t('common.lap'),
 			}),
