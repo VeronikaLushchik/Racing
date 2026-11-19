@@ -20,6 +20,18 @@ TOC_X_NUMBER = 304.8
 TOC_X_TITLE = 323.0
 TOC_LAST_TOP = 252.2
 TOC_STEP = 15.75
+# The note under the table of contents (4 lines, 9 pt, every 13.5 pt; first baseline 296.3 pt
+# from the top). When the list grows into it, it is covered and written again lower.
+NOTE_LINES = [
+    'Структура розділів така: спочатку що відбувається на трасі і яке питання ми ставимо, далі кроки',
+    'розрахунку з одним наскрізним прикладом, потім формула з позначеннями і висновки. Числа у',
+    'прикладах підібрані так, щоб їх можна було перерахувати на калькуляторі; пороги (20 с, 2 м, 107%',
+    'тощо) такі самі, як у коді.',
+]
+NOTE_X = 48.0
+NOTE_FIRST_BASELINE = 296.3
+NOTE_STEP = 13.5
+NOTE_COLOR = (0.353, 0.376, 0.408)
 
 
 def register_font():
@@ -62,6 +74,16 @@ def main(base_path, chapters_path, output_path):
             c.setFont('DejaVuSans', 6)
             c.drawCentredString(w / 2, h - 826.4, f'{index + 1} / {total}')
             if index == 1:
+                last_baseline = TOC_LAST_TOP + TOC_STEP * len(chapters) + 7.4
+                if last_baseline > NOTE_FIRST_BASELINE - 16:
+                    c.setFillColorRGB(1, 1, 1)
+                    top = NOTE_FIRST_BASELINE - 11
+                    bottom = NOTE_FIRST_BASELINE + NOTE_STEP * (len(NOTE_LINES) - 1) + 5
+                    c.rect(NOTE_X - 4, h - bottom, w - 2 * NOTE_X + 8, bottom - top, stroke=0, fill=1)
+                    c.setFillColorRGB(*NOTE_COLOR)
+                    c.setFont('DejaVuSans', 9)
+                    for i, line in enumerate(NOTE_LINES):
+                        c.drawString(NOTE_X, h - (last_baseline + 22 + NOTE_STEP * i), line)
                 c.setFillColorRGB(*TEXT)
                 c.setFont('DejaVuSans', 9.6)
                 for i, chapter in enumerate(chapters):
