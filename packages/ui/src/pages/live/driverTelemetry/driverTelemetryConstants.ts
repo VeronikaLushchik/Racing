@@ -8,7 +8,7 @@ export const READOUT_HZ = 12;
 export const PLAYBACK_RATES = [1, 2, 4, 8, 16, 32, 64];
 /** Fastest speed each replayed source accepts (the relay clamps to the same values). */
 export const MAX_PLAYBACK_RATE: Partial<Record<TSourceKind, number>> = {
-	mock: 8,
+	mock: 64,
 	f1: 16,
 	replay: 64,
 };

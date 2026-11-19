@@ -16,8 +16,10 @@ export interface TSourceOptions {
 	f1SessionKey?: number;
 	/** F1: car number of the driver to follow. */
 	f1DriverNumber?: number;
-	/** Replay / F1: playback speed multiplier (F1 up to ×8, replay up to ×64). */
+	/** Replay / F1 / demo: playback speed multiplier (F1 up to ×16, replay and demo up to ×64). */
 	rate?: number;
+	/** Demo: race length in laps; the demo race ends with the chequered flag after it. */
+	raceLaps?: number;
 }
 
 export interface TSourceDescriptor {
@@ -48,8 +50,11 @@ export type TClientMessage =
 export interface TImportResult {
 	/** Recording name inside data/sessions; start the replay source with it. */
 	file: string;
-	/** rtlg: session.json + frames.bin from the recorder; relay: a recording of this relay. */
-	format: 'rtlg' | 'relay';
+	/**
+	 * rtlg: session.json + frames.bin from the recorder; csv: a raw CSV / TSV log; relay: a
+	 * recording of this relay.
+	 */
+	format: 'rtlg' | 'csv' | 'relay';
 	title: string;
 	frames: number;
 	laps: number;
@@ -58,6 +63,46 @@ export interface TImportResult {
 	trackLength: number | null;
 	/** Message keys of things the import had to guess. */
 	notes: TImportNote[];
+	/** What the file had, so the upload page can say which dashboards it fills. */
+	channels: TImportChannel[];
+	/** Laps with a pit stop (refuelling, standing in the box, or a pit lane flag). */
+	pitLaps: number;
+	/** Size of the uploaded files, bytes. */
+	bytes: number;
+}
+
+export type TImportChannel =
+	| 'speed'
+	| 'rpm'
+	| 'gear'
+	| 'throttle'
+	| 'brake'
+	| 'steer'
+	| 'gForce'
+	| 'yawRate'
+	| 'trackPosition'
+	| 'lapTimer'
+	| 'fuel'
+	| 'tyreTemps'
+	| 'tyreZones'
+	| 'tyreWear'
+	| 'brakeTemps'
+	| 'wheelSpeeds'
+	| 'suspension'
+	| 'engineTemps'
+	| 'racePosition';
+
+/** A recording made from an uploaded file; listed by GET /api/imports. */
+export interface TImportedRecording {
+	file: string;
+	title: string;
+	format: TImportResult['format'];
+	createdAt: number;
+	laps: number;
+	validLaps: number;
+	bestLapMs: number | null;
+	bytes: number;
+	channels: TImportChannel[];
 }
 
 export type TImportNote = 'positionEstimated' | 'trackLengthEstimated' | 'mapMirrored';

@@ -4,7 +4,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { TClientMessage, TServerMessage } from '@racing/shared';
 
 import { listRecordings } from '../pipeline/recorder';
-import { importFiles } from '../sources/fileImport/fileImport';
+import { importFiles, listImports } from '../sources/fileImport/fileImport';
 import { ImportError } from '../sources/fileImport/importTypings';
 import { OpenF1Client } from '../sources/openf1/openf1Client';
 import { parseMultipart, readBody } from './multipartBody';
@@ -48,6 +48,9 @@ export const startRelayServer = (port: number, dataDir: string): http.Server => 
 				const body = await readBody(req);
 				const files = parseMultipart(body, req.headers['content-type'] ?? '');
 				return sendJson(res, 200, importFiles(dataDir, files));
+			}
+			if (url.pathname === '/api/imports' && req.method === 'GET') {
+				return sendJson(res, 200, listImports(dataDir));
 			}
 			if (url.pathname === '/api/health') return sendJson(res, 200, { ok: true });
 			if (url.pathname === '/api/recordings')

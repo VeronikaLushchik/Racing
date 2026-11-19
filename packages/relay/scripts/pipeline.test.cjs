@@ -51,13 +51,49 @@ test('mock source produces bounded channels', () => {
 	}
 });
 
-test('mock weather warms the track and stays plausible', () => {
+test('mock weather warms the track, then clouds cool it', () => {
 	const start = mockWeatherAt(0);
-	const later = mockWeatherAt(30 * 60000);
-	assert.ok(later.trackTempC > start.trackTempC + 5);
-	assert.ok(later.trackTempC > later.airTempC);
-	assert.equal(later.isRaining, false);
-	assert.equal(later.t, 30 * 60000);
+	const sunny = mockWeatherAt(13 * 60000);
+	const cloudy = mockWeatherAt(30 * 60000);
+	assert.ok(sunny.trackTempC > start.trackTempC + 5);
+	assert.ok(cloudy.trackTempC < sunny.trackTempC - 5);
+	assert.ok(cloudy.humidity > sunny.humidity);
+	assert.ok(cloudy.trackTempC > cloudy.airTempC);
+	assert.equal(cloudy.isRaining, false);
+	assert.equal(cloudy.t, 30 * 60000);
+});
+
+test('demo race: realistic laps, one pit stop for softs, a chequered flag', () => {
+	const laps = [];
+	let field = [];
+	const sink = {
+		session: () => undefined,
+		frame: () => undefined,
+		lap: lap => laps.push(lap),
+		field: entries => (field = entries),
+		weather: () => undefined,
+		status: () => undefined,
+	};
+	const mock = new MockSource(sink, { raceLaps: 6 }, 11);
+	for (let i = 0; i < 60 * 60 * 15 && !mock.isFinished; i += 1) mock.advance(1 / 60);
+	assert.equal(mock.isFinished, true);
+	assert.deepEqual(
+		laps.map(lap => lap.lap),
+		[1, 2, 3, 4, 5, 6],
+	);
+	const pit = laps.filter(lap => lap.isPitLap);
+	assert.deepEqual(
+		pit.map(lap => lap.lap),
+		[3],
+	);
+	assert.equal(laps[0].compound, 'Medium');
+	assert.equal(laps[5].compound, 'Soft');
+	laps.filter(lap => !lap.isPitLap && lap.lap > 1 && lap.lap !== 4).forEach(lap => {
+		assert.ok(lap.lapTimeMs > 84000 && lap.lapTimeMs < 92000, `lap ${lap.lapTimeMs}`);
+		assert.equal(lap.sectorsMs.length, 3);
+	});
+	assert.equal(field.length, 10);
+	assert.ok(field.some(entry => entry.isPlayer));
 });
 
 test('lap tracker without a track length rejects restarts as laps', () => {

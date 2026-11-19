@@ -2,6 +2,7 @@ import AnalystPage from 'src/pages/analyst/AnalystPage';
 import CarPage from 'src/pages/car/CarPage';
 import DriverPage from 'src/pages/driver/DriverPage';
 import SourcePage from 'src/pages/source/SourcePage';
+import UploadPage from 'src/pages/upload/UploadPage';
 
 import { TPagesConfig } from 'src/typings';
 
@@ -15,6 +16,12 @@ export const pagesConfig: TPagesConfig = {
 		title: 'Data source',
 		tKey: 'pagesNames.source',
 		Component: SourcePage,
+	},
+	upload: {
+		path: '/upload',
+		title: 'Upload data',
+		tKey: 'pagesNames.upload',
+		Component: UploadPage,
 	},
 	driver: {
 		path: '/driver',

@@ -1,4 +1,5 @@
 import {
+	TImportChannel,
 	TImportNote,
 	TLapSummary,
 	TServerMessage,
@@ -21,11 +22,19 @@ const MAX_FRAME_GAP_MS = 100;
 const BREAK_GAP_MS = 500;
 const BREAK_JUMP_M = 30;
 const BREAK_NORM_JUMP = 0.05;
+/** Lost packets up to this long are bridged when the position still follows the speed. */
+const MAX_DROPOUT_MS = 3000;
 /** Share of the track length a lap must drive to count. */
 const FULL_LAP_SHARE = 0.9;
 /** Lap timer below this at the first sample means the recording started on the line, ms. */
 const START_TIMER_MS = 500;
 const SECTOR_COUNT = 3;
+/** The car within this distance of where laps start is on the line, m. */
+const LINE_RADIUS_M = 25;
+/** Fuel going up by more than this between samples is a refuel, L. */
+const REFUEL_L = 0.5;
+/** Standing still this long inside a lap is a pit stop, ms. */
+const PIT_STANDING_MS = 8000;
 const SMOOTHING = 0.25;
 
 const ORIGIN_NAMES: Record<string, string> = {
@@ -44,7 +53,17 @@ const WHEEL_ALIASES: Record<string, string[]> = {
 
 /** Channel names this importer understands, compared lowercased without separators. */
 const ALIASES = {
-	time: ['trel', 'timems', 'sessiontimems', 'time', 'timestamp', 'sessiontime'],
+	time: [
+		'trel',
+		'timems',
+		'sessiontimems',
+		'time',
+		'timestamp',
+		'sessiontime',
+		'ts',
+		'times',
+		'tsec',
+	],
 	speedKmh: ['speedkmh', 'speedkph', 'speed', 'groundspeed', 'carspeed'],
 	speedMs: ['speedms', 'speedmps'],
 	rpm: ['rpm', 'rpms', 'enginerpm'],
@@ -54,8 +73,9 @@ const ALIASES = {
 	steer: ['steer', 'steering', 'steerangledeg', 'steerangle', 'steeringangle'],
 	gLat: ['acclat', 'glat', 'lateralg', 'accellateral', 'cgaccellateral'],
 	gLong: ['acclong', 'glong', 'glon', 'longitudinalg', 'accellongitudinal'],
-	x: ['posx', 'positionx', 'carcoordx', 'worldx', 'x'],
-	z: ['posz', 'positionz', 'carcoordz', 'worldz', 'z'],
+	x: ['posx', 'positionx', 'carcoordx', 'worldx', 'x', 'xm'],
+	// Loggers that store the ground plane as X/Y name the second axis y (checked last).
+	z: ['posz', 'positionz', 'carcoordz', 'worldz', 'z', 'zm', 'ym', 'posy', 'y'],
 	lap: ['lapindex', 'lap', 'lapnumber', 'currentlap'],
 	lapMs: ['lapms', 'laptimems', 'currentlapms', 'laptime', 'currentlaptime'],
 	lastLapMs: ['lastlapms', 'lastlaptimems', 'lastlap'],
@@ -64,17 +84,26 @@ const ALIASES = {
 	position: ['raceposition', 'position', 'place'],
 	waterTemp: ['watertemp', 'coolanttemp', 'watertempc'],
 	oilTemp: ['oiltemp', 'oiltempc'],
+	yawRate: ['yawratedps', 'yawrate', 'yawrates', 'yawvelocity', 'angularvelocityy'],
 };
 
 const WHEEL_BASES = {
-	tyreTemps: ['tyretemp', 'tiretemp', 'tyrecoretemp', 'tyretempcore', 'tyretempc'],
+	tyreTemps: [
+		'tyretemp',
+		'tiretemp',
+		'tyrecoretemp',
+		'tyretempcore',
+		'tyretempc',
+		'tyre',
+		'tire',
+	],
 	tyreInner: ['tyretempinner', 'tyretempi', 'tiretempinner'],
 	tyreMiddle: ['tyretempmiddle', 'tyretempm', 'tiretempmiddle'],
 	tyreOuter: ['tyretempouter', 'tyretempo', 'tiretempouter'],
 	brakeTemps: ['braketemp', 'brakedisctemp', 'braketempc'],
 	tyreWear: ['tyrewear', 'tirewear'],
 	wheelSpeeds: ['wheelspeed', 'wheelspeedkmh'],
-	wheelAngular: ['wheelangularspeed', 'wheelrps', 'wheelspin'],
+	wheelAngular: ['wheelangularspeed', 'wheelrps', 'wheelspin', 'wheelrads', 'wheel'],
 	tyreRadius: ['tyreradius', 'tireradius', 'wheelradius'],
 	slipRatio: ['slipratio'],
 	suspension: ['suspensionheight', 'rideheight'],
@@ -140,8 +169,21 @@ const gFactor = (channel: TChannel): number => {
 	return unit.startsWith('m/s') || maxAbs(channel.values) > 8 ? 1 / G : 1;
 };
 
-const pedalFactor = (channel: TChannel): number =>
-	unitOf(channel) === '%' || maxAbs(channel.values) > 1.5 ? 0.01 : 1;
+/** Pedals come as 0..1, as percent, or as raw bytes 0..255 (GT7). */
+const pedalFactor = (channel: TChannel): number => {
+	const max = maxAbs(channel.values);
+	if (unitOf(channel) === '%') return 0.01;
+	if (max > 101) return 1 / 255;
+	return max > 1.5 ? 0.01 : 1;
+};
+
+/** Yaw rate in rad/s; loggers write degrees per second as often as radians. */
+const yawFactor = (channel: TChannel, name: string): number => {
+	const unit = unitOf(channel);
+	if (unit.startsWith('rad')) return 1;
+	if (unit.startsWith('deg') || unit === '°/s' || name.endsWith('dps')) return Math.PI / 180;
+	return maxAbs(channel.values) > 6 ? Math.PI / 180 : 1;
+};
 
 const wheelTuple = (
 	wheels: TWheelTuple<TChannel> | null,
@@ -295,7 +337,15 @@ export const buildImportedSession = (
 					)
 				: 0;
 		const normJump = lapNorm ? Math.abs(lapNorm.values[i] - lapNorm.values[i - 1]) : 0;
-		if (rawGap[i] > BREAK_GAP_MS || jump > BREAK_JUMP_M || normJump > BREAK_NORM_JUMP) {
+		// A few lost packets are not a reset: the car moved as far as its speed says.
+		const expected = ((speedOf(i) + speedOf(i - 1)) / 2 / 3.6) * (rawGap[i] / 1000);
+		const isDropout =
+			rawGap[i] <= MAX_DROPOUT_MS &&
+			Math.abs(jump - expected) < Math.max(5, expected * 0.3) &&
+			normJump <= BREAK_NORM_JUMP;
+		const isGap = rawGap[i] > BREAK_GAP_MS && !isDropout;
+		const isJump = jump > BREAK_JUMP_M && !isDropout;
+		if (isGap || isJump || normJump > BREAK_NORM_JUMP) {
 			last.isBroken = true;
 		}
 	}
@@ -309,7 +359,20 @@ export const buildImportedSession = (
 		lapNorm !== null &&
 		lapNorm.values[0] < BREAK_NORM_JUMP &&
 		(!lapMsOf || lapMsOf(0) < START_TIMER_MS);
-	if (startsOnLine) {
+	// A single lap logged from line to line with the counter at 0 (a hotlap or a teammate's best
+	// lap): the path closes on itself.
+	const isClosedSingleLap =
+		!lapNorm &&
+		spans.length === 1 &&
+		spans[0].lap === 0 &&
+		xChannel !== null &&
+		zChannel !== null &&
+		n > 600 &&
+		Math.hypot(
+			xChannel.values[0] - xChannel.values[n - 1],
+			zChannel.values[0] - zChannel.values[n - 1],
+		) < LINE_RADIUS_M;
+	if (startsOnLine || isClosedSingleLap) {
 		spans.forEach(span => {
 			span.lap += 1;
 		});
@@ -330,6 +393,19 @@ export const buildImportedSession = (
 	// A restart also moves the lap counter, so a "lap" of a few seconds or metres is not a lap.
 	const isLongEnough = (span: TLapSpan): boolean =>
 		t[span.end - 1] - t[span.start] >= MIN_LAP_MS && driven[span.end - 1] >= MIN_LAP_M;
+	// Without a lap position, the place where the second lap starts marks the line: a file that
+	// starts or ends there (a logger started on the grid or stopped after the flag) has whole
+	// first and last laps.
+	const line =
+		xChannel && zChannel && spans.length > 1
+			? { x: xChannel.values[spans[1].start], z: zChannel.values[spans[1].start] }
+			: null;
+	const isOnLine = (i: number): boolean =>
+		line !== null &&
+		Math.hypot(
+			(xChannel as TChannel).values[i] - line.x,
+			(zChannel as TChannel).values[i] - line.z,
+		) < LINE_RADIUS_M;
 	const isWholeLap = (span: TLapSpan, index: number): boolean =>
 		span.lap > 0 &&
 		!span.isBroken &&
@@ -337,7 +413,9 @@ export const buildImportedSession = (
 		(lapNorm
 			? lapNorm.values[span.start] < BREAK_NORM_JUMP &&
 				lapNorm.values[span.end - 1] > 1 - BREAK_NORM_JUMP
-			: spans.length === 1 || (index > 0 && index < spans.length - 1));
+			: spans.length === 1 ||
+				((index > 0 || isOnLine(span.start)) &&
+					(index < spans.length - 1 || isOnLine(span.end - 1))));
 
 	let trackLength = table.trackLength && table.trackLength > 0 ? table.trackLength : null;
 	if (!trackLength) {
@@ -360,6 +438,20 @@ export const buildImportedSession = (
 	// the line, so the recorder's lap timer is used only once it has reset.
 	const lapTime = new Float64Array(n);
 	const pitLaps = new Set<TLapSpan>();
+	// A pit stop shows as fuel going up (refuelling, up to the first sample of the next lap) or
+	// as the car standing still for a while in the middle of a lap.
+	const fuelChannel = find(lookup, ALIASES.fuel);
+	const isPitStop = (span: TLapSpan): boolean => {
+		let standing = 0;
+		for (let i = span.start + 1; i < Math.min(n, span.end + 1); i += 1) {
+			if (fuelChannel && fuelChannel.values[i] - fuelChannel.values[i - 1] > REFUEL_L) {
+				return true;
+			}
+			standing = speedOf(i) < 1 && i < span.end ? standing + (t[i] - t[i - 1]) : 0;
+			if (standing > PIT_STANDING_MS && span.start > 0) return true;
+		}
+		return false;
+	};
 	spans.forEach(span => {
 		let isHeld = false;
 		if (lapMsOf && span.start > 0) {
@@ -369,6 +461,7 @@ export const buildImportedSession = (
 		}
 		// A timer already running at the line without a reset was started in the pit lane.
 		if (lapMsOf && span.start > 0 && !isHeld && lapMsOf(span.start) > 500) pitLaps.add(span);
+		if (isPitStop(span)) pitLaps.add(span);
 		let hasReset = !isHeld;
 		for (let i = span.start; i < span.end; i += 1) {
 			if (!hasReset && i > span.start && lapMsOf && lapMsOf(i) < lapMsOf(i - 1)) {
@@ -445,7 +538,14 @@ export const buildImportedSession = (
 	// Measured G, else derived from speed and heading.
 	const gLatChannel = find(lookup, ALIASES.gLat);
 	const gLongChannel = find(lookup, ALIASES.gLong);
-	const gLatOf = reader(gLatChannel, gLatChannel ? gFactor(gLatChannel) : 1);
+	// Without a lateral G channel, speed × yaw rate is the next best thing.
+	const yawColumn = findNamed(lookup, ALIASES.yawRate);
+	const yawOf = yawColumn ? reader(yawColumn[1], yawFactor(yawColumn[1], yawColumn[0])) : null;
+	const gLatOf = gLatChannel
+		? reader(gLatChannel, gFactor(gLatChannel))
+		: yawOf
+			? (i: number) => -((speedOf(i) / 3.6) * (yawOf as (i: number) => number)(i)) / G
+			: null;
 	const gLongOf = reader(gLongChannel, gLongChannel ? gFactor(gLongChannel) : 1);
 	const steerChannel = find(lookup, ALIASES.steer);
 	const steerScale = steerChannel ? Math.max(1, maxAbs(steerChannel.values)) : 1;
@@ -560,7 +660,7 @@ export const buildImportedSession = (
 			hasFuel: fuelOf !== null,
 			hasSectors: trackLength !== null,
 			hasOpponents: false,
-			hasMeasuredG: gLatOf !== null && gLongOf !== null,
+			hasMeasuredG: gLatChannel !== null && gLongOf !== null,
 			hasWheelSpeeds: wheelSpeeds !== null || radius !== null || tyreRadius !== null,
 			hasSuspension: suspension !== null,
 			hasEngineTemps: waterOf !== null || oilOf !== null,
@@ -644,6 +744,29 @@ export const buildImportedSession = (
 	const lastSummary = summaries.get(n);
 	if (lastSummary) messages.push({ type: 'lap', lap: lastSummary });
 
+	const found: Record<TImportChannel, boolean> = {
+		speed: true,
+		rpm: rpmOf !== null,
+		gear: gearOf !== null,
+		throttle: throttleOf !== null,
+		brake: brakeOf !== null,
+		steer: steerChannel !== null,
+		gForce: gLatChannel !== null && gLongOf !== null,
+		yawRate: gLatChannel === null && yawOf !== null,
+		trackPosition: xChannel !== null && zChannel !== null,
+		lapTimer: lapMsOf !== null || lastLapColumn !== null,
+		fuel: fuelOf !== null,
+		tyreTemps: tyreTemps !== null || hasZones,
+		tyreZones: hasZones,
+		tyreWear: tyreWear !== null,
+		brakeTemps: brakeTemps !== null,
+		wheelSpeeds: session.capabilities.hasWheelSpeeds === true,
+		suspension: suspension !== null,
+		engineTemps: waterOf !== null || oilOf !== null,
+		racePosition: positionOf !== null,
+	};
+	const channels = (Object.keys(found) as TImportChannel[]).filter(key => found[key]);
+
 	const laps = [...summaries.values()];
 	const validTimes = laps.filter(lap => lap.isValid).map(lap => lap.lapTimeMs);
 	return {
@@ -655,6 +778,8 @@ export const buildImportedSession = (
 		bestLapMs: validTimes.length ? Math.min(...validTimes) : null,
 		trackLength,
 		notes,
+		channels,
+		pitLaps: laps.filter(lap => lap.isPitLap).length,
 	};
 };
 
