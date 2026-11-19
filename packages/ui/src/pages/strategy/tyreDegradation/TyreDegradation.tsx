@@ -33,7 +33,20 @@ const TyreDegradation: FC = () => {
 		);
 	}
 
-	const { stint, fitLaps, degradationS, fuelPerLapL, forecast, temperature, wear } = result;
+	const {
+		stint,
+		fitLaps,
+		outlierLaps,
+		degradationS,
+		degradationSigma,
+		isCliff,
+		rateChangeS,
+		noiseS,
+		fuelPerLapL,
+		forecast,
+		temperature,
+		wear,
+	} = result;
 	const nextLap = forecast[0];
 	const lastLap = stint[stint.length - 1];
 
@@ -55,6 +68,7 @@ const TyreDegradation: FC = () => {
 				? [t('degradation.warningWear', wheelName(i), formatLapsLeft(trend.lapsLeft))]
 				: [],
 		),
+		...(isCliff ? [t('degradation.warningCliff', formatSigned(rateChangeS, 2))] : []),
 		...(degradationS > HIGH_DEGRADATION_S
 			? [t('degradation.warningHigh', formatSigned(degradationS, 2))]
 			: []),
@@ -81,7 +95,11 @@ const TyreDegradation: FC = () => {
 						{formatSigned(degradationS, 3, ' s')}
 					</strong>
 					<span className={classes.stat_hint}>
-						{t('degradation.rateHint', fitLaps.length)}
+						{t(
+							'degradation.rateHint',
+							fitLaps.length,
+							(2 * degradationSigma).toFixed(3),
+						)}
 					</span>
 				</div>
 				<div className={classes.stat}>
@@ -115,7 +133,12 @@ const TyreDegradation: FC = () => {
 			<div className={classes.columns}>
 				<Panel
 					title={t('degradation.chart')}
-					subtitle={t('degradation.chartHint', profile.fuelEffectSPerL)}
+					subtitle={t(
+						'degradation.chartHint',
+						profile.fuelEffectSPerL,
+						noiseS.toFixed(2),
+						outlierLaps.length,
+					)}
 					actions={<CarProfileToggle />}
 					className={classes.chart_panel}
 				>
