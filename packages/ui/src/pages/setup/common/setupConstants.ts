@@ -48,3 +48,6 @@ export const FIELD_LABEL: Record<TSetupField, { row: string; axle: 'front' | 're
 		},
 		{} as Record<TSetupField, { row: string; axle: 'front' | 'rear' | null }>,
 	);
+
+/** Understeer gradients within this of zero, ° per G, read as neutral. */
+export const NEUTRAL_GRADIENT_DEG = 1;

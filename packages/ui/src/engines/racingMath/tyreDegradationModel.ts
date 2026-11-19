@@ -1,11 +1,33 @@
 import type { TLapRecord } from '../../modules/telemetry/lapTypings';
 
+import {
+	projectTrend,
+	differenceSigma,
+	runTrendFilter,
+	TCovariance2,
+	TTrendNoise,
+} from './kalmanTrendModel';
+
 /** Lap-time cost of carrying fuel, s per litre. A common rule of thumb; real cars differ. */
 export const FUEL_EFFECT_S_PER_L = 0.03;
 export const FIT_LAPS = 5;
 export const MIN_FIT_LAPS = 3;
 /** Width of the prediction band, in standard errors (about 95%). */
 const BAND_SIGMAS = 2;
+/** Lap-to-lap noise used until there are enough laps to measure it, s. */
+export const DEFAULT_NOISE_S = 0.2;
+/** Floor on the measured noise: a game timer is not more precise than this, s. */
+const MIN_NOISE_S = 0.05;
+/** How far the corrected pace may wander per lap on its own (track rubber, wind), s. */
+export const LEVEL_DRIFT_S = 0.02;
+/** How far the degradation rate may change per lap, s/lap. This is what lets a cliff show. */
+export const RATE_DRIFT_S = 0.01;
+/** Prior spread of the degradation rate before any laps, s/lap. Wide on purpose. */
+const PRIOR_RATE_S = 0.5;
+/** Innovation gate: a lap further than this many sigmas from the prediction is an outlier. */
+export const OUTLIER_SIGMAS = 3;
+/** Rise of the degradation rate over the stint that counts as the tyres falling off, s/lap. */
+export const CLIFF_RATE_S = 0.08;
 
 export interface TLinearFit {
 	slope: number;
@@ -44,12 +66,47 @@ export type TWheelTrend = {
 	lapsLeft: number | null;
 };
 
+/** Smoothed trend at one lap of the stint. */
+export interface TTrendLap {
+	lap: number;
+	tyreAge: number;
+	/** Smoothed fuel-corrected lap time, s. */
+	correctedS: number;
+	/** The same with that lap's fuel load added back, for plotting next to raw times, s. */
+	lapTimeS: number;
+	/** Smoothed degradation rate at this lap, s per lap. */
+	rateS: number;
+}
+
+/** Filter state at the end of the stint: what strategy simulations start from. */
+export interface TDegradationState {
+	tyreAge: number;
+	/** Fuel-corrected lap time at the current tyre age, s. */
+	paceS: number;
+	/** Time lost per lap of tyre age, s. */
+	rateS: number;
+	/** Covariance of [pace, rate]. */
+	covariance: TCovariance2;
+}
+
 export interface TDegradationResult {
 	stint: TStintLap[];
+	/** Clean laps the filter accepted. */
 	fitLaps: TStintLap[];
-	fit: TLinearFit;
-	/** Fuel-corrected time lost per lap of tyre age, s. */
+	/** Lap numbers the filter rejected as outliers. */
+	outlierLaps: number[];
+	trend: TTrendLap[];
+	/** Fuel-corrected time lost per lap of tyre age, now, s. */
 	degradationS: number;
+	/** Standard deviation of `degradationS`. */
+	degradationSigma: number;
+	/** Lap-to-lap noise of a clean lap, s. */
+	noiseS: number;
+	state: TDegradationState;
+	/** How much the degradation rate rose from the start of the stint, s per lap. */
+	rateChangeS: number;
+	/** The rate rose by more than `CLIFF_RATE_S`: the tyres are falling off. */
+	isCliff: boolean;
 	fuelPerLapL: number | null;
 	forecast: TForecastLap[];
 	temperature: TWheelTrend[] | null;
@@ -73,12 +130,6 @@ export const fitLine = (xs: number[], ys: number[]): TLinearFit => {
 	const sigma = count > 2 ? Math.sqrt(residual / (count - 2)) : 0;
 	return { slope, intercept, sigma, meanX, sxx, count };
 };
-
-/** Half-width of the prediction band at `x`. */
-export const predictionSpread = (fit: TLinearFit, x: number): number =>
-	BAND_SIGMAS *
-	fit.sigma *
-	Math.sqrt(1 + 1 / fit.count + (fit.sxx > 0 ? (x - fit.meanX) ** 2 / fit.sxx : 0));
 
 /**
  * Laps of the current stint: everything after the last pit lap. The out-lap itself and
@@ -126,8 +177,12 @@ const trendOf = (
 };
 
 /**
- * Fits fuel-corrected lap time against tyre age over the last `FIT_LAPS` clean laps of the
- * stint and projects `horizon` laps ahead. Null until `MIN_FIT_LAPS` clean laps exist.
+ * Kalman filter over the stint: the state is the fuel-corrected lap time at the current tyre
+ * age and the time lost per lap of age (see `kalmanTrendModel`). Every clean lap after the
+ * out-lap is a measurement; laps the gate rejects (traffic, a mistake) are reported as
+ * outliers. Measurement noise comes from the laps themselves (robust spread around a straight
+ * line), process noise lets the rate drift so a tyre "cliff" shows up as a rising rate.
+ * Null until `MIN_FIT_LAPS` clean laps exist.
  */
 export const modelDegradation = (
 	records: TLapRecord[],
@@ -139,7 +194,8 @@ export const modelDegradation = (
 	},
 ): TDegradationResult | null => {
 	const fuelEffect = options.fuelEffect ?? FUEL_EFFECT_S_PER_L;
-	const stint: TStintLap[] = currentStint(records).map(({ lap, tyreAge }) => {
+	const stintRecords = currentStint(records);
+	const stint: TStintLap[] = stintRecords.map(({ lap, tyreAge }) => {
 		const lapTimeS = lap.lapTimeMs / 1000;
 		const fuelL =
 			lap.fuelStart !== null && lap.fuelEnd !== null
@@ -154,20 +210,45 @@ export const modelDegradation = (
 		};
 	});
 
-	const stintRecords = currentStint(records);
 	const clean = stint.filter((_, i) => {
 		const record = stintRecords[i].lap;
 		return record.isValid && !record.isPitLap && stintRecords[i].tyreAge > 1;
 	});
-	const fitLaps = clean.slice(-FIT_LAPS);
-	if (fitLaps.length < MIN_FIT_LAPS) {
+	if (clean.length < MIN_FIT_LAPS) {
 		return null;
 	}
 
-	const fit = fitLine(
-		fitLaps.map(lap => lap.tyreAge),
-		fitLaps.map(lap => lap.correctedS),
+	const noise = estimateNoise(clean);
+	const first = clean[0];
+	const last = stint[stint.length - 1];
+	const steps = runTrendFilter(
+		new Map(clean.map(lap => [lap.tyreAge, lap.correctedS])),
+		first.tyreAge,
+		last.tyreAge,
+		{
+			state: [first.correctedS, 0],
+			covariance: [noise.measurement + 1, 0, PRIOR_RATE_S ** 2],
+		},
+		noise,
+		OUTLIER_SIGMAS,
 	);
+	const outlierAges = new Set(steps.filter(step => step.isOutlier).map(step => step.index));
+	const fitLaps = clean.filter(lap => !outlierAges.has(lap.tyreAge));
+	const outlierLaps = clean.filter(lap => outlierAges.has(lap.tyreAge)).map(lap => lap.lap);
+	const final = steps[steps.length - 1];
+
+	const trend: TTrendLap[] = steps.map(step => {
+		const lap = stint.find(item => item.tyreAge === step.index) as TStintLap;
+		const fuelOffset = lap.lapTimeS - lap.correctedS;
+		return {
+			lap: lap.lap,
+			tyreAge: step.index,
+			correctedS: step.smoothed[0],
+			lapTimeS: step.smoothed[0] + fuelOffset,
+			rateS: step.smoothed[1],
+		};
+	});
+	const rateChangeS = trend[trend.length - 1].rateS - trend[0].rateS;
 
 	const burns = stintRecords
 		.map(({ lap }) =>
@@ -177,7 +258,6 @@ export const modelDegradation = (
 	const fuelPerLapL =
 		burns.length > 0 ? burns.reduce((sum, burn) => sum + burn, 0) / burns.length : null;
 
-	const last = stint[stint.length - 1];
 	const lastRecord = stintRecords[stintRecords.length - 1].lap;
 	let fuel = lastRecord.fuelEnd;
 	const forecast: TForecastLap[] = [];
@@ -188,9 +268,10 @@ export const modelDegradation = (
 		if (fuel !== null && fuelPerLapL !== null) {
 			fuel = Math.max(0, fuel - fuelPerLapL);
 		}
-		const corrected = fit.intercept + fit.slope * tyreAge;
-		const lapTimeS = corrected + (fuelMid ?? 0) * fuelEffect;
-		const spread = predictionSpread(fit, tyreAge);
+		const projected = projectTrend(final.state, final.covariance, k, noise);
+		const lapTimeS = projected.state[0] + (fuelMid ?? 0) * fuelEffect;
+		const spread =
+			BAND_SIGMAS * Math.sqrt(Math.max(0, projected.covariance[0]) + noise.measurement);
 		forecast.push({
 			lap: last.lap + k,
 			tyreAge,
@@ -209,8 +290,19 @@ export const modelDegradation = (
 	return {
 		stint,
 		fitLaps,
-		fit,
-		degradationS: fit.slope,
+		outlierLaps,
+		trend,
+		degradationS: final.state[1],
+		degradationSigma: Math.sqrt(Math.max(0, final.covariance[2])),
+		noiseS: Math.sqrt(noise.measurement),
+		state: {
+			tyreAge: last.tyreAge,
+			paceS: final.state[0],
+			rateS: final.state[1],
+			covariance: final.covariance,
+		},
+		rateChangeS,
+		isCliff: rateChangeS >= CLIFF_RATE_S,
 		fuelPerLapL,
 		forecast,
 		temperature: hasTemps
@@ -232,4 +324,17 @@ export const modelDegradation = (
 				)
 			: null,
 	};
+};
+
+/**
+ * Lap-to-lap noise from the clean laps: the robust spread of their lap-to-lap differences
+ * (see `differenceSigma`), so neither a slow lap nor a cliff inflates it. Too few laps fall
+ * back to a default.
+ */
+export const estimateNoise = (laps: TStintLap[]): TTrendNoise => {
+	const measured = differenceSigma(
+		laps.map(lap => ({ index: lap.tyreAge, value: lap.correctedS })),
+	);
+	const sigma = measured === null ? DEFAULT_NOISE_S : Math.max(MIN_NOISE_S, measured);
+	return { measurement: sigma ** 2, level: LEVEL_DRIFT_S ** 2, rate: RATE_DRIFT_S ** 2 };
 };

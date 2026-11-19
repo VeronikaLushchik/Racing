@@ -53,6 +53,8 @@ export const evidenceText = (t: TTranslate, advice: TSetupAdvice): string => {
 			return t('setup.evidence.counterSteer', Math.round(advice.value * 100));
 		case 'share':
 			return t('setup.evidence.share', Math.round(advice.value * 100));
+		case 'degPerG':
+			return t('setup.evidence.degPerG', Math.abs(advice.value).toFixed(2));
 		case 'celsius':
 		default:
 			return t('setup.evidence.celsius', advice.value.toFixed(1));

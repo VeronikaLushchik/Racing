@@ -12,6 +12,18 @@ import type { TTelemetryFrame } from '@racing/shared';
  * steering against the corner (counter-steer): oversteer. This also cancels any sign
  * convention of the source.
  *
+ * Understeer gradient. The same equation also holds sample by sample, so over all steady
+ * cornering samples we fit δ = c₁·κ + c₂·a_y (least squares, two unknowns, no intercept).
+ * κ and a_y differ by v², so corners at different speeds tell the two terms apart. c₁ is the
+ * steering needed per unit of curvature (wheelbase times steering ratio), c₂ the extra
+ * steering per G (one c₂ per speed band, see `fitSteering`). With a wheelbase L the road-wheel understeer gradient is K = L·c₂/c₁ rad per
+ * G, the textbook number in degrees per G. K > 0 understeer, with characteristic speed
+ * v_ch = √(L·g/K): at v_ch the car needs twice the geometric lock. K < 0 oversteer, with
+ * critical speed v_cr = √(−L·g/K), above which it is unstable. Fitting c₂ separately for slow
+ * and fast corners (c₁ shared) separates mechanical from aerodynamic balance: springs and
+ * bars act at every speed, wings grow with v², so a gradient that rises with speed points at
+ * the wings.
+ *
  * Everything else is direct: wheel speed against car speed for locking and wheelspin, how
  * often the suspension sits at its lowest point at speed for bottoming, front against rear
  * tyre temperature for balance and the tyre window for compound choice.
@@ -40,6 +52,15 @@ const MIN_SLIP_SPEED_KMH = 40;
 const BOTTOMING_SPEED_KMH = 120;
 /** Within this of the lowest height seen, the suspension is "on the stops", m. */
 const BOTTOMING_BAND_M = 0.0015;
+/** Lateral G above which a steady sample enters the understeer gradient fit. */
+const GRADIENT_MIN_G = 0.15;
+/** Corner speed bands for mechanical against aero balance, km/h. */
+export const SLOW_CORNER_KMH = 110;
+export const FAST_CORNER_KMH = 160;
+/** Fast minus slow gradient that counts as an aero balance problem, ° per G. */
+export const AERO_GRADIENT_DEG = 0.5;
+/** Wheelbase used when the car profile gives none, m. */
+export const DEFAULT_WHEELBASE_M = 2.7;
 /** Samples kept per bucket: a few minutes of driving at 60 Hz. */
 const BUCKET_SIZE = 6000;
 
@@ -54,6 +75,7 @@ export const MIN_SAMPLES = {
 	traction: 120,
 	bottoming: 300,
 	tyres: 300,
+	gradient: 300,
 } as const;
 
 /** Thresholds on the balance ratio (1 = neutral). */
@@ -108,6 +130,139 @@ export interface TAxleSlip {
 	rearShare: number;
 }
 
+export type TSpeedBand = 'slow' | 'medium' | 'fast';
+export const SPEED_BANDS: TSpeedBand[] = ['slow', 'medium', 'fast'];
+
+/** Sums for the least squares fit δ = c₁·κ + c₂·a_y. */
+export interface TGradientSums {
+	samples: number;
+	kk: number;
+	ka: number;
+	aa: number;
+	kd: number;
+	ad: number;
+}
+
+const emptySums = (): TGradientSums => ({ samples: 0, kk: 0, ka: 0, aa: 0, kd: 0, ad: 0 });
+
+export interface TSteerFit {
+	samples: number;
+	/** Steering per unit curvature. */
+	c1: number;
+	/** Extra steering per G over all corners. */
+	c2: number;
+	/** Extra steering per G in slow and fast corners (c₁ shared); null with too few samples. */
+	c2Slow: number | null;
+	c2Fast: number | null;
+	slowSamples: number;
+	fastSamples: number;
+}
+
+/**
+ * Least squares fit of δ = c₁·κ + c₂_b·a_y, one c₂ per speed band and c₁ shared. With
+ * the band terms eliminated, c₂_b = (Σaδ_b − c₁·Σκa_b) / Σa²_b and
+ * c₁ = (Σκδ − Σ_b Σκa_b·Σaδ_b/Σa²_b) / (Σκ² − Σ_b (Σκa_b)²/Σa²_b).
+ * The spread of speeds inside a band pins c₁ down; without it one c₂ is fitted for every corner
+ * and the band values are null. Null when the speeds do not vary at all.
+ */
+export const fitSteering = (bands: Record<TSpeedBand, TGradientSums>): TSteerFit | null => {
+	let samples = 0;
+	let numerator = 0;
+	let denominator = 0;
+	let kk = 0;
+	SPEED_BANDS.forEach(band => {
+		const sums = bands[band];
+		samples += sums.samples;
+		kk += sums.kk;
+		numerator += sums.kd;
+		denominator += sums.kk;
+		if (sums.aa > 0) {
+			numerator -= (sums.ka * sums.ad) / sums.aa;
+			denominator -= (sums.ka * sums.ka) / sums.aa;
+		}
+	});
+	if (samples < MIN_SAMPLES.gradient) {
+		return null;
+	}
+	const all = SPEED_BANDS.reduce(
+		(acc, band) => ({
+			samples: acc.samples + bands[band].samples,
+			kk: acc.kk + bands[band].kk,
+			ka: acc.ka + bands[band].ka,
+			aa: acc.aa + bands[band].aa,
+			kd: acc.kd + bands[band].kd,
+			ad: acc.ad + bands[band].ad,
+		}),
+		emptySums(),
+	);
+	const hasBandSpread = denominator > 1e-6 * kk;
+	let c1 = numerator / denominator;
+	if (!hasBandSpread) {
+		// No speed spread inside the bands: fall back to one c₂ for every corner, which only
+		// needs different speeds across the whole session.
+		const det = all.kk * all.aa - all.ka * all.ka;
+		if (det <= 1e-6 * all.kk * all.aa) {
+			return null;
+		}
+		c1 = (all.kd * all.aa - all.ad * all.ka) / det;
+	}
+	if (!Number.isFinite(c1) || Math.abs(c1) < 1e-9) {
+		return null;
+	}
+	const bandC2 = (sums: TGradientSums, minSamples: number): number | null =>
+		hasBandSpread && sums.samples >= minSamples && sums.aa > 0
+			? (sums.ad - c1 * sums.ka) / sums.aa
+			: null;
+	return {
+		samples,
+		c1,
+		c2: all.aa > 0 ? (all.ad - c1 * all.ka) / all.aa : 0,
+		c2Slow: bandC2(bands.slow, MIN_SAMPLES.gradient),
+		c2Fast: bandC2(bands.fast, MIN_SAMPLES.gradient),
+		slowSamples: bands.slow.samples,
+		fastSamples: bands.fast.samples,
+	};
+};
+
+export interface TUndersteerGradient {
+	samples: number;
+	/** Road-wheel understeer gradient, ° per G: + understeer, − oversteer. */
+	degPerG: number;
+	slowDegPerG: number | null;
+	fastDegPerG: number | null;
+	/** Speed where an understeering car needs twice the geometric lock, km/h. */
+	characteristicKmh: number | null;
+	/** Speed above which an oversteering car is unstable, km/h. */
+	criticalKmh: number | null;
+}
+
+const RAD_TO_DEG = 180 / Math.PI;
+
+/** Turns the steering fit into the textbook gradient for a car of wheelbase `wheelbaseM`. */
+export const understeerGradient = (
+	fit: TSteerFit | null,
+	wheelbaseM = DEFAULT_WHEELBASE_M,
+): TUndersteerGradient | null => {
+	if (!fit) return null;
+	const toDeg = (c2: number) => ((wheelbaseM * c2) / fit.c1) * RAD_TO_DEG;
+	const kRad = (wheelbaseM * fit.c2) / fit.c1;
+	const speedKmh =
+		Math.abs(kRad) > 1e-6 ? Math.sqrt((wheelbaseM * G) / Math.abs(kRad)) * 3.6 : null;
+	return {
+		samples: fit.samples,
+		degPerG: kRad * RAD_TO_DEG,
+		slowDegPerG: fit.c2Slow === null ? null : toDeg(fit.c2Slow),
+		fastDegPerG: fit.c2Fast === null ? null : toDeg(fit.c2Fast),
+		characteristicKmh: kRad > 0 ? speedKmh : null,
+		criticalKmh: kRad < 0 ? speedKmh : null,
+	};
+};
+
+export const speedBand = (speedKmh: number): TSpeedBand => {
+	if (speedKmh < SLOW_CORNER_KMH) return 'slow';
+	return speedKmh > FAST_CORNER_KMH ? 'fast' : 'medium';
+};
+
 export interface TSetupEvidence {
 	frames: number;
 	hasSteering: boolean;
@@ -121,6 +276,8 @@ export interface TSetupEvidence {
 	bottoming: { samples: number; front: number; rear: number } | null;
 	/** Mean tyre temperature, front and rear axle, °C. */
 	tyres: { samples: number; front: number; rear: number } | null;
+	/** Bicycle model fit of steering against curvature and lateral G. */
+	steering: TSteerFit | null;
 }
 
 /** Collects evidence from live frames; one per session, reset after a setup change. */
@@ -141,6 +298,11 @@ export class SetupEvidenceCollector {
 	private readonly frontHeights = new SampleBucket();
 	private readonly rearHeights = new SampleBucket();
 	private tyres = { samples: 0, front: 0, rear: 0 };
+	private gradient: Record<TSpeedBand, TGradientSums> = {
+		slow: emptySums(),
+		medium: emptySums(),
+		fast: emptySums(),
+	};
 	private cached: TSetupEvidence | null = null;
 	private cachedVersion = -1;
 
@@ -156,6 +318,7 @@ export class SetupEvidenceCollector {
 		this.braking = { samples: 0, front: 0, rear: 0 };
 		this.traction = { samples: 0, front: 0, rear: 0 };
 		this.tyres = { samples: 0, front: 0, rear: 0 };
+		this.gradient = { slow: emptySums(), medium: emptySums(), fast: emptySums() };
 		this.version += 1;
 	}
 
@@ -180,6 +343,20 @@ export class SetupEvidenceCollector {
 			}
 			if (absG >= CORNER_G && frame.speed >= MIN_CORNER_SPEED_KMH) {
 				this.phaseRatios[cornerPhase(frame)].push(isSteering ? ratio : 0);
+			}
+			if (
+				isSteering &&
+				frame.brake < ENTRY_BRAKE &&
+				frame.speed >= MIN_CALIBRATION_SPEED_KMH &&
+				absG >= GRADIENT_MIN_G
+			) {
+				const sums = this.gradient[speedBand(frame.speed)];
+				sums.samples += 1;
+				sums.kk += curvature * curvature;
+				sums.ka += curvature * frame.gLat;
+				sums.aa += frame.gLat * frame.gLat;
+				sums.kd += curvature * frame.steer;
+				sums.ad += frame.gLat * frame.steer;
 			}
 		}
 
@@ -280,6 +457,7 @@ export class SetupEvidenceCollector {
 						}
 					: null,
 			tyres: this.tyres.samples > 0 ? { ...this.tyres } : null,
+			steering: fitSteering(this.gradient),
 		};
 		this.cachedVersion = this.version;
 		return this.cached;
@@ -377,9 +555,11 @@ export type TSetupAdviceId =
 	| 'frontTyresHot'
 	| 'rearTyresHot'
 	| 'tyresCold'
-	| 'tyresOverheat';
+	| 'tyresOverheat'
+	| 'highSpeedUndersteer'
+	| 'highSpeedOversteer';
 
-export type TAdviceMetric = 'ratio' | 'counterSteer' | 'share' | 'celsius';
+export type TAdviceMetric = 'ratio' | 'counterSteer' | 'share' | 'celsius' | 'degPerG';
 
 export type TConfidence = 'low' | 'medium' | 'high';
 
@@ -406,6 +586,8 @@ export interface TSetupAdvice {
 export interface TAdviceContext {
 	tyreWindowC: { min: number; max: number };
 	trackTempC: number | null;
+	/** Wheelbase for the understeer gradient, m. */
+	wheelbaseM?: number;
 }
 
 const RULE_CHANGES: Record<TSetupAdviceId, [TSetupField, 1 | -1][]> = {
@@ -470,6 +652,15 @@ const RULE_CHANGES: Record<TSetupAdviceId, [TSetupField, 1 | -1][]> = {
 	],
 	tyresCold: [],
 	tyresOverheat: [],
+	// Balance moves toward understeer as speed grows: the wings, not the bars.
+	highSpeedUndersteer: [
+		['downforceF', 1],
+		['downforceR', -1],
+	],
+	highSpeedOversteer: [
+		['downforceR', 1],
+		['downforceF', -1],
+	],
 };
 
 const roundTo = (value: number, step: number): number => {
@@ -662,6 +853,25 @@ export const adviseSetup = (
 				1 + (average - window.max) / 10,
 				tyres.samples,
 				0,
+			);
+		}
+	}
+
+	const gradient = understeerGradient(evidence.steering, context.wheelbaseM);
+	if (gradient && gradient.slowDegPerG !== null && gradient.fastDegPerG !== null) {
+		const shift = gradient.fastDegPerG - gradient.slowDegPerG;
+		const samples = Math.min(
+			evidence.steering?.slowSamples ?? 0,
+			evidence.steering?.fastSamples ?? 0,
+		);
+		if (Math.abs(shift) >= AERO_GRADIENT_DEG) {
+			add(
+				shift > 0 ? 'highSpeedUndersteer' : 'highSpeedOversteer',
+				'degPerG',
+				shift,
+				Math.abs(shift) / AERO_GRADIENT_DEG,
+				samples,
+				MIN_SAMPLES.gradient,
 			);
 		}
 	}

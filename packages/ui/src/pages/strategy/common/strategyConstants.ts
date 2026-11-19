@@ -8,3 +8,6 @@ export const HIGH_DEGRADATION_S = 0.15;
 export const MAX_DELAY_LAPS = 10;
 /** Beyond this many laps a trend is shown as stable. */
 export const MANY_LAPS = 99;
+/** Laps left in the race until the driver sets it, for the pit stop simulation. */
+export const DEFAULT_LAPS_LEFT = 20;
+export const MAX_LAPS_LEFT = 80;

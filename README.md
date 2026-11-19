@@ -54,11 +54,15 @@ it. Replays play at up to ×64, F1 races up to ×16 and the demo up to ×8.
 
 - **Condition now:** tyre temperatures against the window of the car class (GT3 / F1 / Road),
   brake temps, fuel, engine, wheel slip (locking / wheelspin) and ride height per wheel.
-- **Tyre wear:** fuel-corrected degradation per lap fitted over the stint, a forecast with a 95% band
-  and laps left before the tyres leave their temperature or wear window.
+- **Tyre wear:** fuel-corrected degradation per lap tracked by a Kalman filter over the stint: laps
+  in traffic are dropped as outliers, a rising rate is flagged as the tyres falling off, and the
+  forecast band widens the further it looks. Plus laps left before the tyres leave their
+  temperature or wear window.
 - **Setup advice:** balance by corner phase (entry / mid / exit) from steering against the curvature
   the car follows, front/rear locking, wheelspin, bottoming and tyre balance, each turned into one
-  setup change to try, with alternatives and a confidence level.
+  setup change to try, with alternatives and a confidence level. An understeer gradient (°/G) fitted
+  with the bicycle model, separately for slow and fast corners, tells mechanical balance from aero
+  balance and gives the characteristic or critical speed.
 - **Setup sheet:** GT7-style setup per car and track, stored in the browser; advice then gives exact
   values (e.g. "ARB rear 5 → 4").
 
@@ -78,8 +82,9 @@ it. Replays play at up to ×64, F1 races up to ×16 and the demo up to ×8.
 - **Lap against lap:** ghost lap overlay by distance with a delta trace and a corner-by-corner insight
   table, plus a track map coloured by where time is gained or lost.
 - **Timing:** laps, sectors and the field with gaps.
-- **Race strategy:** pit window (where you rejoin after a stop, clear air or traffic), undercut maths
-  against the car ahead, and weather: OpenF1 readings, demo weather, or manual input for GT7, with the
+- **Race strategy:** pit window (where you rejoin after a stop, clear air or traffic), the undercut
+  against the car ahead with the chance it works, a Monte Carlo simulation of the rest of the race
+  that picks the best lap to stop (with safety cars), and weather: OpenF1 readings, demo weather, or manual input for GT7, with the
   track temperature trend and what it means for tyres.
 
 ![Session debrief](docs/screenshots/analyst-debrief.png)
@@ -91,6 +96,8 @@ it. Replays play at up to ×64, F1 races up to ×16 and the demo up to ×8.
 | ![Track map](docs/screenshots/track-map.png) | ![Pit window](docs/screenshots/pit-window.png) |
 | **Tyre degradation** | **Weather** |
 | ![Tyre degradation](docs/screenshots/tyre-degradation.png) | ![Weather](docs/screenshots/weather-demo.png) |
+| **Understeer gradient and setup advice** | |
+| ![Setup advice](docs/screenshots/setup-gradient.png) | |
 
 ### Data source
 
@@ -98,6 +105,49 @@ Pick a source, start and stop it, open a recorded file, pick a replay. The playb
 non-live source is changed on the Driver page.
 
 ![Open a recorded file](docs/screenshots/open-recorded-file.png)
+
+## Models
+
+All of them live in `packages/ui/src/engines/racingMath/` as pure functions with unit tests.
+
+**Tyre degradation: Kalman filter** (`kalmanTrendModel.ts`, `tyreDegradationModel.ts`). Each clean
+lap's time minus the fuel it carried (`z = t − fuel · 0.03 s/L`) measures a two-number state: the
+pace at the current tyre age and the time lost per lap of age.
+
+```
+x = [pace, rate]ᵀ      x_k = F·x_{k−1},   F = [[1, 1], [0, 1]]      z_k = pace_k + v,  v ~ N(0, R)
+P_k = F·P·Fᵀ + Q       S = P₀₀ + R,   K = P·Hᵀ / S,   x += K·(z − pace),   P = (I − K·H)·P
+```
+
+- `R` (lap noise) comes from the laps themselves: the robust spread (MAD) of first differences
+  (÷√2) and second differences (÷√6), whichever is smaller, so neither a slow lap nor a cliff inflates it.
+- `Q` lets the pace drift 0.02 s and the rate 0.01 s per lap, which is what lets a cliff show up.
+- A lap more than 3σ from the prediction (`ν² > 9·S`) is an outlier and skipped. Two in a row on
+  the same side mean the car really changed: the second is accepted and `P` is scaled by `ν²/S`
+  (fading memory) so the filter catches up.
+- A Rauch–Tung–Striebel smoother draws the trend line through the stint; the forecast band is
+  `±2·√(P₀₀ + R)` and grows with every lap ahead.
+
+**Pit stop: Monte Carlo** (`strategySimulationModel.ts`). 1000 races are played for every stop lap
+with the same random draws (common random numbers): pace and rate from `N(x, P)` of the filter, lap
+noise `N(0, R)`, and a safety car that starts on a green lap with probability λ and lasts 2–4 laps.
+Stopping after `k` laps with tyres `a` laps old, lap `j` costs `pace + rate·j` on the old set and
+`pace + rate·(j − k − a)` plus the warm-up loss on the new one. The stop costs the pit loss, or half
+of it under a safety car. The result per stop lap: expected loss against the best one, its 10–90%
+range against the best in the same race, and the share of races it won. Without noise the optimum
+is `k = (L − a) / 2` for `L` laps left, which the tests check.
+
+**Undercut chance** (`pitWindowModel.ts`). The gain of stopping `n` laps earlier, `n·d·a − warm-up`,
+is linear in the rate `d ~ N(μ, σ²)`, so `P = Φ((n·μ·a − warm-up − gap) / (n·a·σ))`.
+
+**Understeer gradient: bicycle model** (`setupAdvisorModel.ts`). In a steady corner the steering is
+`δ = L·κ + K·a_y`. With curvature `κ = a_y / v²` and the wheel angle known only up to the steering
+ratio, every steady sample (no brake, |a_y| ≥ 0.15 G) goes into a least squares fit
+`δ = c₁·κ + c₂_b·a_y`, with one `c₂` per speed band (under 110, 110–160, over 160 km/h). Then
+`K = L·c₂/c₁` (° per G, `L` is the wheelbase of the car profile), characteristic speed
+`v_ch = √(L·g/K)` for an understeering car and critical speed `v_cr = √(−L·g/K)` for an oversteering
+one. Springs and bars act at every speed and wings grow with `v²`, so when `K` in fast corners is
+0.5 °/G or more away from slow corners, the advice moves the aero balance instead of the bars.
 
 ## How laps are kept honest
 
@@ -153,7 +203,8 @@ Key places:
 - `ui/src/modules/telemetry/telemetryStore.ts` — frames go into a typed-array ring buffer; charts read
   it on their own timer, React subscribes only to throttled values.
 - `ui/src/engines/racingMath/` — all the maths, as pure functions: delta, distance resampling, lap
-  quality, ghost lap and corners, track map, tyre degradation, pit window, weather, setup advisor,
+  quality, ghost lap and corners, track map, tyre degradation (Kalman filter), pit window, pit stop
+  simulation (Monte Carlo), weather, setup advisor,
   trail braking, lap detail and the session report.
 - `ui/src/translations/{en,uk}.xml` — every UI string in both languages.
 
